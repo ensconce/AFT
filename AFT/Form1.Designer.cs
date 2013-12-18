@@ -152,6 +152,7 @@
             this.columnHeader6 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader11 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.label15 = new System.Windows.Forms.Label();
+            this.NetworkProtect = new System.Windows.Forms.CheckBox();
             this.HostsPanel.SuspendLayout();
             this.groupBox6.SuspendLayout();
             this.groupBox5.SuspendLayout();
@@ -616,6 +617,7 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.NetworkProtect);
             this.groupBox1.Controls.Add(this.KillProcesses);
             this.groupBox1.Controls.Add(this.PasswordAuthentication);
             this.groupBox1.Controls.Add(this.Unmount);
@@ -637,7 +639,7 @@
             // KillProcesses
             // 
             this.KillProcesses.AutoSize = true;
-            this.KillProcesses.Location = new System.Drawing.Point(6, 159);
+            this.KillProcesses.Location = new System.Drawing.Point(127, 22);
             this.KillProcesses.Name = "KillProcesses";
             this.KillProcesses.Size = new System.Drawing.Size(90, 17);
             this.KillProcesses.TabIndex = 37;
@@ -648,7 +650,7 @@
             // PasswordAuthentication
             // 
             this.PasswordAuthentication.AutoSize = true;
-            this.PasswordAuthentication.Location = new System.Drawing.Point(6, 137);
+            this.PasswordAuthentication.Location = new System.Drawing.Point(6, 159);
             this.PasswordAuthentication.Name = "PasswordAuthentication";
             this.PasswordAuthentication.Size = new System.Drawing.Size(93, 17);
             this.PasswordAuthentication.TabIndex = 36;
@@ -672,7 +674,7 @@
             // Screensaver
             // 
             this.Screensaver.AutoSize = true;
-            this.Screensaver.Location = new System.Drawing.Point(6, 115);
+            this.Screensaver.Location = new System.Drawing.Point(6, 136);
             this.Screensaver.Name = "Screensaver";
             this.Screensaver.Size = new System.Drawing.Size(106, 17);
             this.Screensaver.TabIndex = 35;
@@ -701,7 +703,7 @@
             // 
             // X
             // 
-            this.X.Location = new System.Drawing.Point(145, 23);
+            this.X.Location = new System.Drawing.Point(144, 131);
             this.X.Name = "X";
             this.X.Size = new System.Drawing.Size(79, 20);
             this.X.TabIndex = 25;
@@ -719,7 +721,7 @@
             // 
             // Y
             // 
-            this.Y.Location = new System.Drawing.Point(145, 49);
+            this.Y.Location = new System.Drawing.Point(144, 157);
             this.Y.Name = "Y";
             this.Y.Size = new System.Drawing.Size(79, 20);
             this.Y.TabIndex = 26;
@@ -728,7 +730,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(125, 29);
+            this.label6.Location = new System.Drawing.Point(124, 137);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(14, 13);
             this.label6.TabIndex = 27;
@@ -737,7 +739,7 @@
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(125, 53);
+            this.label7.Location = new System.Drawing.Point(124, 161);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(14, 13);
             this.label7.TabIndex = 28;
@@ -1408,6 +1410,17 @@
             this.label15.TabIndex = 10;
             this.label15.Text = "Testing / Logging";
             // 
+            // NetworkProtect
+            // 
+            this.NetworkProtect.AutoSize = true;
+            this.NetworkProtect.Location = new System.Drawing.Point(6, 114);
+            this.NetworkProtect.Name = "NetworkProtect";
+            this.NetworkProtect.Size = new System.Drawing.Size(116, 17);
+            this.NetworkProtect.TabIndex = 38;
+            this.NetworkProtect.Text = "Network protection";
+            this.NetworkProtect.UseVisualStyleBackColor = true;
+            this.NetworkProtect.CheckedChanged += new System.EventHandler(this.NetworkProtect_CheckedChanged);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1422,11 +1435,11 @@
             this.Controls.Add(this.TruecryptButton);
             this.Controls.Add(this.PanicButton);
             this.Controls.Add(this.HostsButton);
+            this.Controls.Add(this.DMSPanel);
             this.Controls.Add(this.SettingsPanel);
             this.Controls.Add(this.HostsPanel);
             this.Controls.Add(this.TestingPanel);
             this.Controls.Add(this.HomePanel);
-            this.Controls.Add(this.DMSPanel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
@@ -1589,6 +1602,7 @@
         private System.Windows.Forms.Button RemoveFromKillList;
         private System.Windows.Forms.Button ClearKillProcessList;
         private System.Windows.Forms.CheckBox KillProcesses;
+        private System.Windows.Forms.CheckBox NetworkProtect;
 
     }
 }

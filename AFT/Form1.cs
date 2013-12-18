@@ -49,46 +49,47 @@ namespace AntiForensicToolkit
          *  
          */
 
-        RegistryKey rkApp =     Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+        RegistryKey rkApp =         Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
 
-        string PanicParam =     "panic";
-        string UnmountParam =   "AFTUnmount=";
-        string ConfParam =      "AFTConfig=";
-        string DMSParam =       "AFTDMS=";
-        string AuthParam =      "AFTAuth=";
-        string TestParam =      "AFTTest=";
-        string srcParam =       "AFTSrc=";
-        string ConfirmParam =   "AFTConfirm=";
-        string IDParam =        "AFTID=";
+        string PanicParam =         "panic";
+        string UnmountParam =       "AFTUnmount=";
+        string ConfParam =          "AFTConfig=";
+        string DMSParam =           "AFTDMS=";
+        string AuthParam =          "AFTAuth=";
+        string TestParam =          "AFTTest=";
+        string srcParam =           "AFTSrc=";
+        string ConfirmParam =       "AFTConfirm=";
+        string IDParam =            "AFTID=";
 
-        string AuthorizationKey = ""; // This is the key the UDP broadcast will listen for!        
-        string FilePath =       "C:\\Program Files\\Truecrypt\\Truecrypt.exe";
-        string RunningPath =    Assembly.GetExecutingAssembly().Location;
-        string LogFile =        "AFT.log";
-        string ConfigFile =     "AFTC.ini";
-        string Device =         "";
-        string Password =       "";
+        string AuthorizationKey =   ""; // This is the key the UDP broadcast will listen for!        
+        string FilePath =           "C:\\Program Files\\Truecrypt\\Truecrypt.exe";
+        string RunningPath =        Assembly.GetExecutingAssembly().Location;
+        string LogFile =            "AFT.log";
+        string ConfigFile =         "AFTC.ini";
+        string Device =             "";
+        string Password =           "";
 
-        bool DMSEnabled =       false;
-        bool ShutdownPC =       false;
-        bool UnmountTC =        false;
-        bool UDP =              false;
-        bool HTTP =             false;
-        bool Transmit =         false;
-        bool Broadcast =        false;
-        bool ACProtection =     false;
-        bool USBProtection =    false;
-        bool UseScreensaver =   false;
-        bool AutostartTP =      false;
-        bool MinimizedStartup = false;
-        bool DMSAutostart =     false;
-        bool LoggingEnabled =   false;
-        bool HostCheck =        false;
-        bool UsePassword =      false;
-        bool ConfUpdate =       false;
-        bool EnableRemoteDMS =  false;
-        bool Testing =          false;
-        bool KillProc =         false;
+        bool DMSEnabled =           false;
+        bool ShutdownPC =           false;
+        bool UnmountTC =            false;
+        bool UDP =                  false;
+        bool HTTP =                 false;
+        bool Transmit =             false;
+        bool Broadcast =            false;
+        bool ACProtection =         false;
+        bool USBProtection =        false;
+        bool UseScreensaver =       false;
+        bool AutostartTP =          false;
+        bool MinimizedStartup =     false;
+        bool DMSAutostart =         false;
+        bool LoggingEnabled =       false;
+        bool HostCheck =            false;
+        bool UsePassword =          false;
+        bool ConfUpdate =           false;
+        bool EnableRemoteDMS =      false;
+        bool Testing =              false;
+        bool KillProc =             false;
+        bool NetworkProtection =    false;
 
         int maximumXmovement =  10;
         int maximumYmovement =  10;
@@ -105,6 +106,16 @@ namespace AntiForensicToolkit
         public Form1()
         {
             InitializeComponent();
+            NetworkChange.NetworkAvailabilityChanged += AvailabilityChanged;
+        }
+
+        private void AvailabilityChanged(object sender, NetworkAvailabilityEventArgs e)
+        {
+            if (DMSEnabled && NetworkProtection)
+           { 
+                if (!e.IsAvailable)
+                    MessageBox.Show("Network disconnected panic!!");
+            }
         }
 
         /*
@@ -1203,6 +1214,14 @@ namespace AntiForensicToolkit
             }
         }
 
+        private void NetworkProtect_CheckedChanged(object sender, EventArgs e)
+        {
+            if (NetworkProtect.Checked)
+                NetworkProtection = true;
+            else
+                NetworkProtection = false;
+        }
+
         private void ManualHostCheck_Click(object sender, EventArgs e)
         {
             ManualPing();
@@ -2031,6 +2050,7 @@ namespace AntiForensicToolkit
             }
             else
                 tw.WriteLine("PKILL=");
+            tw.WriteLine("NW_PROTECTION=" + NetworkProtect.Checked.ToString());
             
             tw.Close();
         }
@@ -2134,6 +2154,9 @@ namespace AntiForensicToolkit
                     {
                         KillProcessList.Items.Add(KillList[i]);
                     }
+
+                NetworkProtection = Convert.ToBoolean(config[29].ToString());
+                NetworkProtect.Checked = NetworkProtection;
 
                 maximumXmovement = Convert.ToInt32(config[7]);
                 X.Text = config[7].ToString();
