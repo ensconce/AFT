@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("Anti-Forensic Toolkit")]
-[assembly: AssemblyDescription("Anti-Forensic Toolkit allows users to take precautionary measures against any force that want's information stored on an encrypted computer - A forensic countermeasure..\r\n\r\nChangelog 1.3.0.0 \r\n\r\nEnable remote DMS\r\nUnmount remote volumes\r\nImproved interface\r\nAdded authentication against hosts\r\nEdit hosts\r\nCheck hosts\r\nAC protection\r\nUSB protection\r\nUse screensaver\r\nOptional use password\r\nHTTP / UDP Split\r\nPanic signals BC/Hosts split\r\nAuth key added\r\nAutostart\r\nStart minimized\r\nAutostart DMS\r\nLogging\r\nConfiguration sharing\r\nTesting\r\nKill processes")]
+[assembly: AssemblyDescription("Anti-Forensic Toolkit is a countermeasure application used for encrypted systems.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Björn Ringmann")]
 [assembly: AssemblyProduct("AFT")]
-[assembly: AssemblyCopyright("Copyleft  2013")]
+[assembly: AssemblyCopyright("Totally free")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.3.1.0")]
-[assembly: AssemblyFileVersion("1.3.1.0")]
+[assembly: AssemblyVersion("1.3.2.0")]
+[assembly: AssemblyFileVersion("1.3.2.0")]
