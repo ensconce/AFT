@@ -9,24 +9,24 @@ First it was a complete clone, acting only like a Windows version of it, but has
 that it now can protect against intruders without anyone manually have to set of a panic signal.
 
 Security functions 
-*USB protection - Panics if unrecognized or defined USB devices are plugged in (Rubber ducky anyone?)
-*AC protection - Panics if there is a power change, ie someone removes the power chord from your laptop.
-*Network protection - Panics if the network becomes unreachable.
-*UDP/HTTP listeners - Listens for signals from other computers running panic_bcast or AFT.
+* USB protection - Panics if unrecognized or defined USB devices are plugged in (Rubber ducky anyone?)
+* AC protection - Panics if there is a power change, ie someone removes the power chord from your laptop.
+* Network protection - Panics if the network becomes unreachable.
+* UDP/HTTP listeners - Listens for signals from other computers running panic_bcast or AFT.
 
 Panic events
-*Unmount TrueCrypt partitions
-*Shutdown system
-*Kill processes
-*Send panic signals to hosts or Broadcast address
+* Unmount TrueCrypt partitions
+* Shutdown system
+* Kill processes
+* Send panic signals to hosts or Broadcast address
 
 General settings
-*Testing allows you to check if everything is working as expected.
-*Check if hosts are alive.
-*Send configurations to hosts
-*Enable remote DMS
-*Remote unmount of encrypted partitions
-*Authentication for the communication.
+* Testing allows you to check if everything is working as expected.
+* Check if hosts are alive.
+* Send configurations to hosts
+* Enable remote DMS
+* Remote unmount of encrypted partitions
+* Authentication for the communication.
 
 This project is freely distributed and Open source!
 So modify it, make it better and redistribute it as you wish!
