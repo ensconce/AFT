@@ -1,23 +1,32 @@
-AFT
+Anti-Forensic Toolkit
 ===
 
-Anti-Forensic Toolkit is a countermeasure application used for encrypted systems.
+AFT is a countermeasure application used for encrypted systems.
 
-Anti-Forensic Toolkit is a Windows application used for protecting computers utilizing encryption.
+AFT is a simple Windows application suitable for those who have sensitive data to protect.
 The program is inspired by panic_bcast written by qnrq and is fully compatible with it.
 First it was a complete clone, acting only like a Windows version of it, but has now expanded so far off 
 that it now can protect against intruders without anyone manually have to set of a panic signal.
 
-It works as a Dead-Mans-Switch with many different features, using (any) USB device as a "key".
-This means that if you leave your computer unmonitored (You shouldn't) and still want some sort of 
-protection except for locking your computer (Which you should), you can use this.
+Security functions 
+*USB protection - Panics if unrecognized or defined USB devices are plugged in (Rubber ducky anyone?)
+*AC protection - Panics if there is a power change, ie someone removes the power chord from your laptop.
+*Network protection - Panics if the network becomes unreachable.
+*UDP/HTTP listeners - Listens for signals from other computers running panic_bcast or AFT.
 
-AFT as well as panic_bcast uses UDP broadcast to send panic signals, but with AFT you can also specify hosts, this means that you can send panic signals to hosts outside of your LAN.
-As with panic_bcast it starts a webserver that listens to a specified port, 8080 as default, if accessing 127.0.0.1:8080/panic you will cause a panic.
+Panic events
+*Unmount TrueCrypt partitions
+*Shutdown system
+*Kill processes
+*Send panic signals to hosts or Broadcast address
 
-You can specify what happens when a panic occurs, such as unmount of truecrypt encrypted volumes, shut down the computer and send panic signals to the hosts of course.
-
-It has USB and AC protection, this means that if any unrecognized USB device is plugged or the power chord is unplugged during the DMS, it will cause a panic.
+General settings
+*Testing allows you to check if everything is working as expected.
+*Check if hosts are alive.
+*Send configurations to hosts
+*Enable remote DMS
+*Remote unmount of encrypted partitions
+*Authentication for the communication.
 
 This project is freely distributed and Open source!
 So modify it, make it better and redistribute it as you wish!
