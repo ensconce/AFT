@@ -178,8 +178,8 @@ namespace AntiForensicToolkit
                 Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
                 ConfigFile = config.FilePath;
                 ApplyConfiguration();
-                if(FilePath == "")
-                    checkFileExistance(FilePath);
+                //if(FilePath == "")
+                //    checkFileExistance(FilePath);
                     
             }
             catch (Exception)
@@ -2155,7 +2155,14 @@ namespace AntiForensicToolkit
         {
             
             // General settings
-            FilePath = Properties.Settings.Default.TrueCryptPath;
+            if (Properties.Settings.Default.TrueCryptPath == "")
+                checkFileExistance(FilePath);
+            else
+                FilePath = Properties.Settings.Default.TrueCryptPath;
+                
+
+            
+
             if (Properties.Settings.Default.AuthKey != "")
             {
                 AuthorizationKey = Properties.Settings.Default.AuthKey;
