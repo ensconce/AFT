@@ -60,26 +60,36 @@
             this.HostsExplained = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.DMSPanel = new System.Windows.Forms.Panel();
-            this.RemoveFromKillList = new System.Windows.Forms.Button();
-            this.ClearKillProcessList = new System.Windows.Forms.Button();
-            this.GetProcessList = new System.Windows.Forms.Button();
-            this.AddToKillList = new System.Windows.Forms.Button();
-            this.KillProcessList = new System.Windows.Forms.ListBox();
-            this.RunningProcesses = new System.Windows.Forms.ListBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.label10 = new System.Windows.Forms.Label();
+            this.EditDMSDevice = new System.Windows.Forms.Button();
+            this.DeactivateDMSDevice = new System.Windows.Forms.Button();
+            this.ActivateDMSDevice = new System.Windows.Forms.Button();
+            this.RemoveDMSDevice = new System.Windows.Forms.Button();
+            this.DMSEvent = new System.Windows.Forms.ComboBox();
+            this.label17 = new System.Windows.Forms.Label();
+            this.DMSID = new System.Windows.Forms.TextBox();
+            this.DMSDeviceList = new System.Windows.Forms.ListView();
+            this.columnHeader15 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader16 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader12 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader13 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.label16 = new System.Windows.Forms.Label();
+            this.DMSName = new System.Windows.Forms.TextBox();
             this.label9 = new System.Windows.Forms.Label();
             this.GetUSBBaseline = new System.Windows.Forms.Button();
-            this.IdentifyUSB = new System.Windows.Forms.Button();
             this.SaveDMS = new System.Windows.Forms.Button();
             this.ClearDMS = new System.Windows.Forms.Button();
-            this.DMSDevice = new System.Windows.Forms.ComboBox();
-            this.DMSPassword = new System.Windows.Forms.TextBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.NetworkProtect = new System.Windows.Forms.CheckBox();
+            this.RemoveFromKillList = new System.Windows.Forms.Button();
             this.KillProcesses = new System.Windows.Forms.CheckBox();
-            this.PasswordAuthentication = new System.Windows.Forms.CheckBox();
+            this.ClearKillProcessList = new System.Windows.Forms.Button();
+            this.GetProcessList = new System.Windows.Forms.Button();
             this.Unmount = new System.Windows.Forms.CheckBox();
+            this.AddToKillList = new System.Windows.Forms.Button();
             this.Screensaver = new System.Windows.Forms.CheckBox();
+            this.KillProcessList = new System.Windows.Forms.ListBox();
+            this.RunningProcesses = new System.Windows.Forms.ListBox();
             this.ShutPC = new System.Windows.Forms.CheckBox();
             this.USBProtect = new System.Windows.Forms.CheckBox();
             this.X = new System.Windows.Forms.TextBox();
@@ -88,8 +98,6 @@
             this.label6 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             this.DMSExplained = new System.Windows.Forms.TextBox();
-            this.TempBaseline = new System.Windows.Forms.ListBox();
-            this.BaselineUSBDevices = new System.Windows.Forms.ListBox();
             this.linkLabel1 = new System.Windows.Forms.LinkLabel();
             this.label5 = new System.Windows.Forms.Label();
             this.Home = new System.Windows.Forms.Button();
@@ -152,7 +160,7 @@
             this.columnHeader6 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader11 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.label15 = new System.Windows.Forms.Label();
-            this.NetworkProtect = new System.Windows.Forms.CheckBox();
+            this.DMSDetectCountDown = new System.Windows.Forms.Label();
             this.HostsPanel.SuspendLayout();
             this.groupBox6.SuspendLayout();
             this.groupBox5.SuspendLayout();
@@ -449,17 +457,9 @@
             // 
             this.DMSPanel.BackColor = System.Drawing.Color.Transparent;
             this.DMSPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.DMSPanel.Controls.Add(this.RemoveFromKillList);
-            this.DMSPanel.Controls.Add(this.ClearKillProcessList);
-            this.DMSPanel.Controls.Add(this.GetProcessList);
-            this.DMSPanel.Controls.Add(this.AddToKillList);
-            this.DMSPanel.Controls.Add(this.KillProcessList);
-            this.DMSPanel.Controls.Add(this.RunningProcesses);
             this.DMSPanel.Controls.Add(this.groupBox2);
             this.DMSPanel.Controls.Add(this.groupBox1);
             this.DMSPanel.Controls.Add(this.DMSExplained);
-            this.DMSPanel.Controls.Add(this.TempBaseline);
-            this.DMSPanel.Controls.Add(this.BaselineUSBDevices);
             this.DMSPanel.Controls.Add(this.linkLabel1);
             this.DMSPanel.Controls.Add(this.label5);
             this.DMSPanel.Location = new System.Drawing.Point(112, 15);
@@ -468,87 +468,150 @@
             this.DMSPanel.TabIndex = 10;
             this.DMSPanel.Visible = false;
             // 
-            // RemoveFromKillList
-            // 
-            this.RemoveFromKillList.Location = new System.Drawing.Point(410, 331);
-            this.RemoveFromKillList.Name = "RemoveFromKillList";
-            this.RemoveFromKillList.Size = new System.Drawing.Size(23, 23);
-            this.RemoveFromKillList.TabIndex = 43;
-            this.RemoveFromKillList.Text = "X";
-            this.RemoveFromKillList.UseVisualStyleBackColor = true;
-            this.RemoveFromKillList.Click += new System.EventHandler(this.RemoveFromKillList_Click);
-            // 
-            // ClearKillProcessList
-            // 
-            this.ClearKillProcessList.Location = new System.Drawing.Point(439, 209);
-            this.ClearKillProcessList.Name = "ClearKillProcessList";
-            this.ClearKillProcessList.Size = new System.Drawing.Size(150, 22);
-            this.ClearKillProcessList.TabIndex = 42;
-            this.ClearKillProcessList.Text = "Clear kill list";
-            this.ClearKillProcessList.UseVisualStyleBackColor = true;
-            this.ClearKillProcessList.Click += new System.EventHandler(this.ClearKillProcessList_Click);
-            // 
-            // GetProcessList
-            // 
-            this.GetProcessList.Location = new System.Drawing.Point(263, 209);
-            this.GetProcessList.Name = "GetProcessList";
-            this.GetProcessList.Size = new System.Drawing.Size(141, 23);
-            this.GetProcessList.TabIndex = 41;
-            this.GetProcessList.Text = "Refresh process list";
-            this.GetProcessList.UseVisualStyleBackColor = true;
-            this.GetProcessList.Click += new System.EventHandler(this.GetProcessList_Click);
-            // 
-            // AddToKillList
-            // 
-            this.AddToKillList.Location = new System.Drawing.Point(410, 300);
-            this.AddToKillList.Name = "AddToKillList";
-            this.AddToKillList.Size = new System.Drawing.Size(23, 23);
-            this.AddToKillList.TabIndex = 40;
-            this.AddToKillList.Text = ">";
-            this.AddToKillList.UseVisualStyleBackColor = true;
-            this.AddToKillList.Click += new System.EventHandler(this.AddToKillList_Click);
-            // 
-            // KillProcessList
-            // 
-            this.KillProcessList.FormattingEnabled = true;
-            this.KillProcessList.Location = new System.Drawing.Point(439, 240);
-            this.KillProcessList.Name = "KillProcessList";
-            this.KillProcessList.Size = new System.Drawing.Size(151, 199);
-            this.KillProcessList.TabIndex = 39;
-            // 
-            // RunningProcesses
-            // 
-            this.RunningProcesses.FormattingEnabled = true;
-            this.RunningProcesses.Location = new System.Drawing.Point(263, 238);
-            this.RunningProcesses.Name = "RunningProcesses";
-            this.RunningProcesses.Size = new System.Drawing.Size(141, 199);
-            this.RunningProcesses.TabIndex = 38;
-            // 
             // groupBox2
             // 
-            this.groupBox2.Controls.Add(this.label10);
+            this.groupBox2.Controls.Add(this.DMSDetectCountDown);
+            this.groupBox2.Controls.Add(this.EditDMSDevice);
+            this.groupBox2.Controls.Add(this.DeactivateDMSDevice);
+            this.groupBox2.Controls.Add(this.ActivateDMSDevice);
+            this.groupBox2.Controls.Add(this.RemoveDMSDevice);
+            this.groupBox2.Controls.Add(this.DMSEvent);
+            this.groupBox2.Controls.Add(this.label17);
+            this.groupBox2.Controls.Add(this.DMSID);
+            this.groupBox2.Controls.Add(this.SaveDMS);
+            this.groupBox2.Controls.Add(this.DMSDeviceList);
+            this.groupBox2.Controls.Add(this.label16);
+            this.groupBox2.Controls.Add(this.DMSName);
             this.groupBox2.Controls.Add(this.label9);
             this.groupBox2.Controls.Add(this.GetUSBBaseline);
-            this.groupBox2.Controls.Add(this.IdentifyUSB);
-            this.groupBox2.Controls.Add(this.SaveDMS);
             this.groupBox2.Controls.Add(this.ClearDMS);
-            this.groupBox2.Controls.Add(this.DMSDevice);
-            this.groupBox2.Controls.Add(this.DMSPassword);
             this.groupBox2.Location = new System.Drawing.Point(14, 53);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(240, 179);
+            this.groupBox2.Size = new System.Drawing.Size(576, 179);
             this.groupBox2.TabIndex = 37;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "DMS Device";
             // 
-            // label10
+            // EditDMSDevice
             // 
-            this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(11, 118);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(53, 13);
-            this.label10.TabIndex = 17;
-            this.label10.Text = "Password";
+            this.EditDMSDevice.Location = new System.Drawing.Point(402, 141);
+            this.EditDMSDevice.Name = "EditDMSDevice";
+            this.EditDMSDevice.Size = new System.Drawing.Size(75, 23);
+            this.EditDMSDevice.TabIndex = 22;
+            this.EditDMSDevice.Text = "Edit";
+            this.EditDMSDevice.UseVisualStyleBackColor = true;
+            this.EditDMSDevice.Click += new System.EventHandler(this.EditDMSDevice_Click);
+            // 
+            // DeactivateDMSDevice
+            // 
+            this.DeactivateDMSDevice.Location = new System.Drawing.Point(318, 141);
+            this.DeactivateDMSDevice.Name = "DeactivateDMSDevice";
+            this.DeactivateDMSDevice.Size = new System.Drawing.Size(75, 23);
+            this.DeactivateDMSDevice.TabIndex = 21;
+            this.DeactivateDMSDevice.Text = "Deactivate";
+            this.DeactivateDMSDevice.UseVisualStyleBackColor = true;
+            this.DeactivateDMSDevice.Click += new System.EventHandler(this.DeactivateDMSDevice_Click);
+            // 
+            // ActivateDMSDevice
+            // 
+            this.ActivateDMSDevice.Location = new System.Drawing.Point(231, 141);
+            this.ActivateDMSDevice.Name = "ActivateDMSDevice";
+            this.ActivateDMSDevice.Size = new System.Drawing.Size(75, 23);
+            this.ActivateDMSDevice.TabIndex = 20;
+            this.ActivateDMSDevice.Text = "Activate";
+            this.ActivateDMSDevice.UseVisualStyleBackColor = true;
+            this.ActivateDMSDevice.Click += new System.EventHandler(this.ActivateDMSDevice_Click);
+            // 
+            // RemoveDMSDevice
+            // 
+            this.RemoveDMSDevice.Location = new System.Drawing.Point(488, 141);
+            this.RemoveDMSDevice.Name = "RemoveDMSDevice";
+            this.RemoveDMSDevice.Size = new System.Drawing.Size(75, 23);
+            this.RemoveDMSDevice.TabIndex = 23;
+            this.RemoveDMSDevice.Text = "Remove";
+            this.RemoveDMSDevice.UseVisualStyleBackColor = true;
+            this.RemoveDMSDevice.Click += new System.EventHandler(this.RemoveDMSDevice_Click);
+            // 
+            // DMSEvent
+            // 
+            this.DMSEvent.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.DMSEvent.FormattingEnabled = true;
+            this.DMSEvent.Items.AddRange(new object[] {
+            "Key",
+            "Panic",
+            "Lock"});
+            this.DMSEvent.Location = new System.Drawing.Point(69, 114);
+            this.DMSEvent.Name = "DMSEvent";
+            this.DMSEvent.Size = new System.Drawing.Size(154, 21);
+            this.DMSEvent.TabIndex = 16;
+            // 
+            // label17
+            // 
+            this.label17.AutoSize = true;
+            this.label17.Location = new System.Drawing.Point(11, 118);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(35, 13);
+            this.label17.TabIndex = 44;
+            this.label17.Text = "Event";
+            // 
+            // DMSID
+            // 
+            this.DMSID.Enabled = false;
+            this.DMSID.Location = new System.Drawing.Point(70, 87);
+            this.DMSID.Name = "DMSID";
+            this.DMSID.Size = new System.Drawing.Size(153, 20);
+            this.DMSID.TabIndex = 15;
+            // 
+            // DMSDeviceList
+            // 
+            this.DMSDeviceList.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeader15,
+            this.columnHeader16,
+            this.columnHeader12,
+            this.columnHeader13});
+            this.DMSDeviceList.FullRowSelect = true;
+            this.DMSDeviceList.GridLines = true;
+            this.DMSDeviceList.Location = new System.Drawing.Point(232, 23);
+            this.DMSDeviceList.Name = "DMSDeviceList";
+            this.DMSDeviceList.Size = new System.Drawing.Size(331, 112);
+            this.DMSDeviceList.TabIndex = 19;
+            this.DMSDeviceList.UseCompatibleStateImageBehavior = false;
+            this.DMSDeviceList.View = System.Windows.Forms.View.Details;
+            // 
+            // columnHeader15
+            // 
+            this.columnHeader15.Text = "Active";
+            this.columnHeader15.Width = 42;
+            // 
+            // columnHeader16
+            // 
+            this.columnHeader16.Text = "Event";
+            this.columnHeader16.Width = 46;
+            // 
+            // columnHeader12
+            // 
+            this.columnHeader12.Text = "Name";
+            // 
+            // columnHeader13
+            // 
+            this.columnHeader13.Text = "Device ID";
+            this.columnHeader13.Width = 167;
+            // 
+            // label16
+            // 
+            this.label16.AutoSize = true;
+            this.label16.Location = new System.Drawing.Point(11, 63);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(35, 13);
+            this.label16.TabIndex = 45;
+            this.label16.Text = "Name";
+            // 
+            // DMSName
+            // 
+            this.DMSName.Location = new System.Drawing.Point(70, 60);
+            this.DMSName.Name = "DMSName";
+            this.DMSName.Size = new System.Drawing.Size(153, 20);
+            this.DMSName.TabIndex = 14;
             // 
             // label9
             // 
@@ -561,67 +624,46 @@
             // 
             // GetUSBBaseline
             // 
-            this.GetUSBBaseline.Location = new System.Drawing.Point(5, 19);
+            this.GetUSBBaseline.Location = new System.Drawing.Point(11, 23);
             this.GetUSBBaseline.Name = "GetUSBBaseline";
-            this.GetUSBBaseline.Size = new System.Drawing.Size(219, 23);
-            this.GetUSBBaseline.TabIndex = 11;
-            this.GetUSBBaseline.Text = "Get baseline";
+            this.GetUSBBaseline.Size = new System.Drawing.Size(101, 23);
+            this.GetUSBBaseline.TabIndex = 13;
+            this.GetUSBBaseline.Text = "Detect";
             this.GetUSBBaseline.UseVisualStyleBackColor = true;
             this.GetUSBBaseline.Click += new System.EventHandler(this.GetUSBBaseline_Click);
             // 
-            // IdentifyUSB
-            // 
-            this.IdentifyUSB.Location = new System.Drawing.Point(6, 52);
-            this.IdentifyUSB.Name = "IdentifyUSB";
-            this.IdentifyUSB.Size = new System.Drawing.Size(217, 23);
-            this.IdentifyUSB.TabIndex = 11;
-            this.IdentifyUSB.Text = "Identify USB";
-            this.IdentifyUSB.UseVisualStyleBackColor = true;
-            this.IdentifyUSB.Click += new System.EventHandler(this.IdentifyUSB_Click);
-            // 
             // SaveDMS
             // 
-            this.SaveDMS.Location = new System.Drawing.Point(9, 141);
+            this.SaveDMS.Location = new System.Drawing.Point(127, 141);
             this.SaveDMS.Name = "SaveDMS";
-            this.SaveDMS.Size = new System.Drawing.Size(101, 23);
-            this.SaveDMS.TabIndex = 11;
-            this.SaveDMS.Text = "Save switch";
+            this.SaveDMS.Size = new System.Drawing.Size(96, 23);
+            this.SaveDMS.TabIndex = 17;
+            this.SaveDMS.Text = "Add";
             this.SaveDMS.UseVisualStyleBackColor = true;
             this.SaveDMS.Click += new System.EventHandler(this.SaveDMS_Click);
             // 
             // ClearDMS
             // 
-            this.ClearDMS.Location = new System.Drawing.Point(127, 141);
+            this.ClearDMS.Location = new System.Drawing.Point(11, 141);
             this.ClearDMS.Name = "ClearDMS";
-            this.ClearDMS.Size = new System.Drawing.Size(96, 23);
-            this.ClearDMS.TabIndex = 16;
+            this.ClearDMS.Size = new System.Drawing.Size(101, 23);
+            this.ClearDMS.TabIndex = 18;
             this.ClearDMS.Text = "Clear";
             this.ClearDMS.UseVisualStyleBackColor = true;
             this.ClearDMS.Click += new System.EventHandler(this.ClearDMS_Click);
             // 
-            // DMSDevice
-            // 
-            this.DMSDevice.FormattingEnabled = true;
-            this.DMSDevice.Location = new System.Drawing.Point(70, 88);
-            this.DMSDevice.Name = "DMSDevice";
-            this.DMSDevice.Size = new System.Drawing.Size(154, 21);
-            this.DMSDevice.TabIndex = 12;
-            // 
-            // DMSPassword
-            // 
-            this.DMSPassword.Location = new System.Drawing.Point(70, 115);
-            this.DMSPassword.Name = "DMSPassword";
-            this.DMSPassword.Size = new System.Drawing.Size(154, 20);
-            this.DMSPassword.TabIndex = 13;
-            this.DMSPassword.UseSystemPasswordChar = true;
-            // 
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.NetworkProtect);
+            this.groupBox1.Controls.Add(this.RemoveFromKillList);
             this.groupBox1.Controls.Add(this.KillProcesses);
-            this.groupBox1.Controls.Add(this.PasswordAuthentication);
+            this.groupBox1.Controls.Add(this.ClearKillProcessList);
+            this.groupBox1.Controls.Add(this.GetProcessList);
             this.groupBox1.Controls.Add(this.Unmount);
+            this.groupBox1.Controls.Add(this.AddToKillList);
             this.groupBox1.Controls.Add(this.Screensaver);
+            this.groupBox1.Controls.Add(this.KillProcessList);
+            this.groupBox1.Controls.Add(this.RunningProcesses);
             this.groupBox1.Controls.Add(this.ShutPC);
             this.groupBox1.Controls.Add(this.USBProtect);
             this.groupBox1.Controls.Add(this.X);
@@ -631,32 +673,62 @@
             this.groupBox1.Controls.Add(this.label7);
             this.groupBox1.Location = new System.Drawing.Point(14, 246);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(240, 191);
+            this.groupBox1.Size = new System.Drawing.Size(576, 191);
             this.groupBox1.TabIndex = 36;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Security configuration";
             // 
+            // NetworkProtect
+            // 
+            this.NetworkProtect.AutoSize = true;
+            this.NetworkProtect.Location = new System.Drawing.Point(6, 114);
+            this.NetworkProtect.Name = "NetworkProtect";
+            this.NetworkProtect.Size = new System.Drawing.Size(116, 17);
+            this.NetworkProtect.TabIndex = 28;
+            this.NetworkProtect.Text = "Network protection";
+            this.NetworkProtect.UseVisualStyleBackColor = true;
+            this.NetworkProtect.CheckedChanged += new System.EventHandler(this.NetworkProtect_CheckedChanged);
+            // 
+            // RemoveFromKillList
+            // 
+            this.RemoveFromKillList.Location = new System.Drawing.Point(383, 107);
+            this.RemoveFromKillList.Name = "RemoveFromKillList";
+            this.RemoveFromKillList.Size = new System.Drawing.Size(23, 22);
+            this.RemoveFromKillList.TabIndex = 36;
+            this.RemoveFromKillList.Text = "X";
+            this.RemoveFromKillList.UseVisualStyleBackColor = true;
+            this.RemoveFromKillList.Click += new System.EventHandler(this.RemoveFromKillList_Click);
+            // 
             // KillProcesses
             // 
             this.KillProcesses.AutoSize = true;
-            this.KillProcesses.Location = new System.Drawing.Point(127, 22);
+            this.KillProcesses.Location = new System.Drawing.Point(6, 158);
             this.KillProcesses.Name = "KillProcesses";
             this.KillProcesses.Size = new System.Drawing.Size(90, 17);
-            this.KillProcesses.TabIndex = 37;
+            this.KillProcesses.TabIndex = 30;
             this.KillProcesses.Text = "Kill processes";
             this.KillProcesses.UseVisualStyleBackColor = true;
             this.KillProcesses.CheckedChanged += new System.EventHandler(this.KillProcesses_CheckedChanged);
             // 
-            // PasswordAuthentication
+            // ClearKillProcessList
             // 
-            this.PasswordAuthentication.AutoSize = true;
-            this.PasswordAuthentication.Location = new System.Drawing.Point(6, 159);
-            this.PasswordAuthentication.Name = "PasswordAuthentication";
-            this.PasswordAuthentication.Size = new System.Drawing.Size(93, 17);
-            this.PasswordAuthentication.TabIndex = 36;
-            this.PasswordAuthentication.Text = "Use password";
-            this.PasswordAuthentication.UseVisualStyleBackColor = true;
-            this.PasswordAuthentication.CheckedChanged += new System.EventHandler(this.PasswordAuthentication_CheckedChanged);
+            this.ClearKillProcessList.Location = new System.Drawing.Point(412, 18);
+            this.ClearKillProcessList.Name = "ClearKillProcessList";
+            this.ClearKillProcessList.Size = new System.Drawing.Size(151, 22);
+            this.ClearKillProcessList.TabIndex = 37;
+            this.ClearKillProcessList.Text = "Clear kill list";
+            this.ClearKillProcessList.UseVisualStyleBackColor = true;
+            this.ClearKillProcessList.Click += new System.EventHandler(this.ClearKillProcessList_Click);
+            // 
+            // GetProcessList
+            // 
+            this.GetProcessList.Location = new System.Drawing.Point(236, 19);
+            this.GetProcessList.Name = "GetProcessList";
+            this.GetProcessList.Size = new System.Drawing.Size(141, 22);
+            this.GetProcessList.TabIndex = 33;
+            this.GetProcessList.Text = "Refresh process list";
+            this.GetProcessList.UseVisualStyleBackColor = true;
+            this.GetProcessList.Click += new System.EventHandler(this.GetProcessList_Click);
             // 
             // Unmount
             // 
@@ -671,15 +743,42 @@
             this.Unmount.UseVisualStyleBackColor = true;
             this.Unmount.CheckedChanged += new System.EventHandler(this.Unmount_CheckedChanged);
             // 
+            // AddToKillList
+            // 
+            this.AddToKillList.Location = new System.Drawing.Point(383, 79);
+            this.AddToKillList.Name = "AddToKillList";
+            this.AddToKillList.Size = new System.Drawing.Size(23, 22);
+            this.AddToKillList.TabIndex = 35;
+            this.AddToKillList.Text = ">";
+            this.AddToKillList.UseVisualStyleBackColor = true;
+            this.AddToKillList.Click += new System.EventHandler(this.AddToKillList_Click);
+            // 
             // Screensaver
             // 
             this.Screensaver.AutoSize = true;
             this.Screensaver.Location = new System.Drawing.Point(6, 136);
             this.Screensaver.Name = "Screensaver";
             this.Screensaver.Size = new System.Drawing.Size(106, 17);
-            this.Screensaver.TabIndex = 35;
+            this.Screensaver.TabIndex = 29;
             this.Screensaver.Text = "Use screensaver";
             this.Screensaver.UseVisualStyleBackColor = true;
+            this.Screensaver.CheckedChanged += new System.EventHandler(this.Screensaver_CheckedChanged);
+            // 
+            // KillProcessList
+            // 
+            this.KillProcessList.FormattingEnabled = true;
+            this.KillProcessList.Location = new System.Drawing.Point(412, 44);
+            this.KillProcessList.Name = "KillProcessList";
+            this.KillProcessList.Size = new System.Drawing.Size(151, 134);
+            this.KillProcessList.TabIndex = 38;
+            // 
+            // RunningProcesses
+            // 
+            this.RunningProcesses.FormattingEnabled = true;
+            this.RunningProcesses.Location = new System.Drawing.Point(236, 44);
+            this.RunningProcesses.Name = "RunningProcesses";
+            this.RunningProcesses.Size = new System.Drawing.Size(141, 134);
+            this.RunningProcesses.TabIndex = 34;
             // 
             // ShutPC
             // 
@@ -687,7 +786,7 @@
             this.ShutPC.Location = new System.Drawing.Point(6, 46);
             this.ShutPC.Name = "ShutPC";
             this.ShutPC.Size = new System.Drawing.Size(74, 17);
-            this.ShutPC.TabIndex = 23;
+            this.ShutPC.TabIndex = 25;
             this.ShutPC.Text = "Shutdown";
             this.ShutPC.UseVisualStyleBackColor = true;
             // 
@@ -697,7 +796,7 @@
             this.USBProtect.Location = new System.Drawing.Point(6, 92);
             this.USBProtect.Name = "USBProtect";
             this.USBProtect.Size = new System.Drawing.Size(99, 17);
-            this.USBProtect.TabIndex = 34;
+            this.USBProtect.TabIndex = 27;
             this.USBProtect.Text = "USB Protection";
             this.USBProtect.UseVisualStyleBackColor = true;
             // 
@@ -706,8 +805,9 @@
             this.X.Location = new System.Drawing.Point(144, 131);
             this.X.Name = "X";
             this.X.Size = new System.Drawing.Size(79, 20);
-            this.X.TabIndex = 25;
+            this.X.TabIndex = 31;
             this.X.Text = "10";
+            this.X.TextChanged += new System.EventHandler(this.X_TextChanged);
             // 
             // ACProtect
             // 
@@ -715,7 +815,7 @@
             this.ACProtect.Location = new System.Drawing.Point(6, 69);
             this.ACProtect.Name = "ACProtect";
             this.ACProtect.Size = new System.Drawing.Size(91, 17);
-            this.ACProtect.TabIndex = 33;
+            this.ACProtect.TabIndex = 26;
             this.ACProtect.Text = "AC Protection";
             this.ACProtect.UseVisualStyleBackColor = true;
             // 
@@ -724,8 +824,9 @@
             this.Y.Location = new System.Drawing.Point(144, 157);
             this.Y.Name = "Y";
             this.Y.Size = new System.Drawing.Size(79, 20);
-            this.Y.TabIndex = 26;
+            this.Y.TabIndex = 32;
             this.Y.Text = "10";
+            this.Y.TextChanged += new System.EventHandler(this.Y_TextChanged);
             // 
             // label6
             // 
@@ -749,31 +850,14 @@
             // 
             this.DMSExplained.AcceptsReturn = true;
             this.DMSExplained.BackColor = System.Drawing.Color.White;
-            this.DMSExplained.Location = new System.Drawing.Point(263, 16);
+            this.DMSExplained.Location = new System.Drawing.Point(230, 450);
             this.DMSExplained.Multiline = true;
             this.DMSExplained.Name = "DMSExplained";
             this.DMSExplained.ReadOnly = true;
             this.DMSExplained.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.DMSExplained.Size = new System.Drawing.Size(328, 181);
+            this.DMSExplained.Size = new System.Drawing.Size(328, 14);
             this.DMSExplained.TabIndex = 17;
-            // 
-            // TempBaseline
-            // 
-            this.TempBaseline.FormattingEnabled = true;
-            this.TempBaseline.Location = new System.Drawing.Point(146, 449);
-            this.TempBaseline.Name = "TempBaseline";
-            this.TempBaseline.Size = new System.Drawing.Size(44, 17);
-            this.TempBaseline.TabIndex = 15;
-            this.TempBaseline.Visible = false;
-            // 
-            // BaselineUSBDevices
-            // 
-            this.BaselineUSBDevices.FormattingEnabled = true;
-            this.BaselineUSBDevices.Location = new System.Drawing.Point(96, 450);
-            this.BaselineUSBDevices.Name = "BaselineUSBDevices";
-            this.BaselineUSBDevices.Size = new System.Drawing.Size(44, 17);
-            this.BaselineUSBDevices.TabIndex = 15;
-            this.BaselineUSBDevices.Visible = false;
+            this.DMSExplained.Visible = false;
             // 
             // linkLabel1
             // 
@@ -803,7 +887,7 @@
             this.Home.Location = new System.Drawing.Point(12, 15);
             this.Home.Name = "Home";
             this.Home.Size = new System.Drawing.Size(89, 60);
-            this.Home.TabIndex = 16;
+            this.Home.TabIndex = 0;
             this.Home.UseVisualStyleBackColor = false;
             this.Home.Click += new System.EventHandler(this.Home_Click_1);
             this.Home.MouseHover += new System.EventHandler(this.Home_MouseHover);
@@ -833,7 +917,7 @@
             this.EnableDMS.Location = new System.Drawing.Point(19, 108);
             this.EnableDMS.Name = "EnableDMS";
             this.EnableDMS.Size = new System.Drawing.Size(572, 60);
-            this.EnableDMS.TabIndex = 0;
+            this.EnableDMS.TabIndex = 7;
             this.EnableDMS.Text = "Enable DMS";
             this.EnableDMS.UseVisualStyleBackColor = true;
             this.EnableDMS.Click += new System.EventHandler(this.EnableDMS_Click);
@@ -854,7 +938,7 @@
             this.UnmountRemoteVolues.Location = new System.Drawing.Point(20, 298);
             this.UnmountRemoteVolues.Name = "UnmountRemoteVolues";
             this.UnmountRemoteVolues.Size = new System.Drawing.Size(572, 60);
-            this.UnmountRemoteVolues.TabIndex = 6;
+            this.UnmountRemoteVolues.TabIndex = 10;
             this.UnmountRemoteVolues.Text = "Unmount remote volumes";
             this.UnmountRemoteVolues.UseVisualStyleBackColor = true;
             this.UnmountRemoteVolues.Click += new System.EventHandler(this.UnmountRemoteVolumes_Click);
@@ -874,7 +958,7 @@
             this.UnmountTrueCryptVolumes.Location = new System.Drawing.Point(19, 234);
             this.UnmountTrueCryptVolumes.Name = "UnmountTrueCryptVolumes";
             this.UnmountTrueCryptVolumes.Size = new System.Drawing.Size(572, 60);
-            this.UnmountTrueCryptVolumes.TabIndex = 4;
+            this.UnmountTrueCryptVolumes.TabIndex = 9;
             this.UnmountTrueCryptVolumes.Text = "Unmount TrueCrypt volumes";
             this.UnmountTrueCryptVolumes.UseVisualStyleBackColor = true;
             this.UnmountTrueCryptVolumes.Click += new System.EventHandler(this.UnmountTrueCryptVolumes_Click);
@@ -885,7 +969,7 @@
             this.AboutAFT.Location = new System.Drawing.Point(495, 432);
             this.AboutAFT.Name = "AboutAFT";
             this.AboutAFT.Size = new System.Drawing.Size(96, 30);
-            this.AboutAFT.TabIndex = 3;
+            this.AboutAFT.TabIndex = 12;
             this.AboutAFT.Text = "About AFT";
             this.AboutAFT.UseVisualStyleBackColor = true;
             this.AboutAFT.Click += new System.EventHandler(this.AboutAFT_Click);
@@ -896,7 +980,7 @@
             this.ShutdownComputer.Location = new System.Drawing.Point(19, 362);
             this.ShutdownComputer.Name = "ShutdownComputer";
             this.ShutdownComputer.Size = new System.Drawing.Size(572, 60);
-            this.ShutdownComputer.TabIndex = 5;
+            this.ShutdownComputer.TabIndex = 11;
             this.ShutdownComputer.Text = "Shutdown computer";
             this.ShutdownComputer.UseVisualStyleBackColor = true;
             this.ShutdownComputer.Click += new System.EventHandler(this.ShutdownComputer_Click);
@@ -932,8 +1016,6 @@
             // HTTPListen
             // 
             this.HTTPListen.AutoSize = true;
-            this.HTTPListen.Checked = true;
-            this.HTTPListen.CheckState = System.Windows.Forms.CheckState.Checked;
             this.HTTPListen.Location = new System.Drawing.Point(6, 23);
             this.HTTPListen.Name = "HTTPListen";
             this.HTTPListen.Size = new System.Drawing.Size(95, 17);
@@ -945,6 +1027,7 @@
             // Forward
             // 
             this.Forward.AutoSize = true;
+            this.Forward.Enabled = false;
             this.Forward.Location = new System.Drawing.Point(6, 66);
             this.Forward.Name = "Forward";
             this.Forward.Size = new System.Drawing.Size(93, 17);
@@ -968,6 +1051,7 @@
             // UseBroadcast
             // 
             this.UseBroadcast.AutoSize = true;
+            this.UseBroadcast.Enabled = false;
             this.UseBroadcast.Location = new System.Drawing.Point(6, 89);
             this.UseBroadcast.Name = "UseBroadcast";
             this.UseBroadcast.Size = new System.Drawing.Size(103, 17);
@@ -1189,6 +1273,7 @@
             // 
             // HTTPPort
             // 
+            this.HTTPPort.Enabled = false;
             this.HTTPPort.Location = new System.Drawing.Point(163, 22);
             this.HTTPPort.Name = "HTTPPort";
             this.HTTPPort.Size = new System.Drawing.Size(61, 20);
@@ -1252,7 +1337,7 @@
             this.TestingButton.Location = new System.Drawing.Point(12, 429);
             this.TestingButton.Name = "TestingButton";
             this.TestingButton.Size = new System.Drawing.Size(89, 63);
-            this.TestingButton.TabIndex = 19;
+            this.TestingButton.TabIndex = 6;
             this.TestingButton.UseVisualStyleBackColor = false;
             this.TestingButton.Click += new System.EventHandler(this.TestingButton_Click);
             // 
@@ -1410,16 +1495,15 @@
             this.label15.TabIndex = 10;
             this.label15.Text = "Testing / Logging";
             // 
-            // NetworkProtect
+            // DMSDetectCountDown
             // 
-            this.NetworkProtect.AutoSize = true;
-            this.NetworkProtect.Location = new System.Drawing.Point(6, 114);
-            this.NetworkProtect.Name = "NetworkProtect";
-            this.NetworkProtect.Size = new System.Drawing.Size(116, 17);
-            this.NetworkProtect.TabIndex = 38;
-            this.NetworkProtect.Text = "Network protection";
-            this.NetworkProtect.UseVisualStyleBackColor = true;
-            this.NetworkProtect.CheckedChanged += new System.EventHandler(this.NetworkProtect_CheckedChanged);
+            this.DMSDetectCountDown.AutoSize = true;
+            this.DMSDetectCountDown.ForeColor = System.Drawing.Color.DarkRed;
+            this.DMSDetectCountDown.Location = new System.Drawing.Point(114, 28);
+            this.DMSDetectCountDown.Name = "DMSDetectCountDown";
+            this.DMSDetectCountDown.Size = new System.Drawing.Size(97, 13);
+            this.DMSDetectCountDown.TabIndex = 38;
+            this.DMSDetectCountDown.Text = "Device countdown";
             // 
             // Form1
             // 
@@ -1435,11 +1519,11 @@
             this.Controls.Add(this.TruecryptButton);
             this.Controls.Add(this.PanicButton);
             this.Controls.Add(this.HostsButton);
-            this.Controls.Add(this.DMSPanel);
             this.Controls.Add(this.SettingsPanel);
             this.Controls.Add(this.HostsPanel);
             this.Controls.Add(this.TestingPanel);
             this.Controls.Add(this.HomePanel);
+            this.Controls.Add(this.DMSPanel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
@@ -1493,14 +1577,9 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Panel DMSPanel;
         private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.ComboBox DMSDevice;
-        private System.Windows.Forms.Button IdentifyUSB;
         private System.Windows.Forms.Button GetUSBBaseline;
-        private System.Windows.Forms.TextBox DMSPassword;
         private System.Windows.Forms.Button SaveDMS;
         private System.Windows.Forms.LinkLabel linkLabel1;
-        private System.Windows.Forms.ListBox BaselineUSBDevices;
-        private System.Windows.Forms.ListBox TempBaseline;
         private System.Windows.Forms.Button Home;
         private System.Windows.Forms.Panel HomePanel;
         private System.Windows.Forms.Button EnableDMS;
@@ -1532,7 +1611,6 @@
         private System.Windows.Forms.CheckBox Autostart;
         private System.Windows.Forms.Panel SettingsPanel;
         private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.Label label10;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.GroupBox groupBox4;
@@ -1558,7 +1636,6 @@
         private System.Windows.Forms.CheckBox CheckHosts;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Label EventLabel;
-        private System.Windows.Forms.CheckBox PasswordAuthentication;
         private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.LinkLabel OpenLogFile;
         private System.Windows.Forms.Button ManualHostCheck;
@@ -1603,6 +1680,21 @@
         private System.Windows.Forms.Button ClearKillProcessList;
         private System.Windows.Forms.CheckBox KillProcesses;
         private System.Windows.Forms.CheckBox NetworkProtect;
+        private System.Windows.Forms.ListView DMSDeviceList;
+        private System.Windows.Forms.ColumnHeader columnHeader12;
+        private System.Windows.Forms.ColumnHeader columnHeader13;
+        private System.Windows.Forms.Label label16;
+        private System.Windows.Forms.TextBox DMSName;
+        private System.Windows.Forms.TextBox DMSID;
+        private System.Windows.Forms.Button ActivateDMSDevice;
+        private System.Windows.Forms.Button RemoveDMSDevice;
+        private System.Windows.Forms.ComboBox DMSEvent;
+        private System.Windows.Forms.Label label17;
+        private System.Windows.Forms.ColumnHeader columnHeader15;
+        private System.Windows.Forms.ColumnHeader columnHeader16;
+        private System.Windows.Forms.Button DeactivateDMSDevice;
+        private System.Windows.Forms.Button EditDMSDevice;
+        private System.Windows.Forms.Label DMSDetectCountDown;
 
     }
 }

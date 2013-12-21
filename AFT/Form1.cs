@@ -38,6 +38,7 @@ using System.Runtime.InteropServices;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Linq.Expressions;
+using System.Configuration;
 
 
 namespace AntiForensicToolkit
@@ -68,6 +69,9 @@ namespace AntiForensicToolkit
         string ConfigFile =         "AFTC.ini";
         string Device =             "";
         string Password =           "";
+        ArrayList DMSDevices =      new ArrayList();
+        ArrayList DMSPasswords =    new ArrayList();
+        ArrayList DMSEvents =       new ArrayList();
 
         bool DMSEnabled =           false;
         bool ShutdownPC =           false;
@@ -79,7 +83,7 @@ namespace AntiForensicToolkit
         bool ACProtection =         false;
         bool USBProtection =        false;
         bool UseScreensaver =       false;
-        bool AutostartTP =          false;
+        bool AutostartAFT =         false;
         bool MinimizedStartup =     false;
         bool DMSAutostart =         false;
         bool LoggingEnabled =       false;
@@ -90,6 +94,7 @@ namespace AntiForensicToolkit
         bool Testing =              false;
         bool KillProc =             false;
         bool NetworkProtection =    false;
+        bool DetectingDMS =         false;
 
         int maximumXmovement =  10;
         int maximumYmovement =  10;
@@ -112,9 +117,9 @@ namespace AntiForensicToolkit
         private void AvailabilityChanged(object sender, NetworkAvailabilityEventArgs e)
         {
             if (DMSEnabled && NetworkProtection)
-           { 
-                if (!e.IsAvailable)
-                    MessageBox.Show("Network disconnected panic!!");
+           {
+               if (!e.IsAvailable)
+                   Panic();
             }
         }
 
@@ -124,7 +129,7 @@ namespace AntiForensicToolkit
          */
         private void Form1_Load(object sender, EventArgs e)
         {
-            
+            this.ShowInTaskbar = false;
             this.BringToFront();
             this.Focus();
             DMSExplained.Text = " 1. Unplug the USB device you would like to use as your switch. \r\n 2. Click the 'Get baseline' button \r\n 3. Insert your USB device. \r\n 4. Click the 'Identify USB' button. \r\n 5. Select a password. \r\n 6. Save your DMS. \r\n\r\n";
@@ -167,24 +172,20 @@ namespace AntiForensicToolkit
             HostsExplained.Text += "Add / Remove / edit hosts in the list\r\n\r\n";
             HostsExplained.Text += "Check hosts - Checks if hosts are alive.";
 
-            this.ShowInTaskbar = false;
+            try
+            {
+                
+                Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
+                ConfigFile = config.FilePath;
+                ApplyConfiguration();
+                if(FilePath == "")
+                    checkFileExistance(FilePath);
+                    
+            }
+            catch (Exception)
+            {
 
-            //if (Unmount.Checked)
-            //    UnmountTC = true;
-            //if (HTTPListen.Checked)
-            //    HTTP = true;
-            //if (UDPListen.Checked)
-            //    UDP = true;
-            //if (Forward.Checked)
-            //    Transmit = true;
-            //if (UseBroadcast.Checked)
-            //    Broadcast = true;
-            //
-            // Check and apply our configuration
-            ArrayList config = checkConfiguration();
-            if (config.Count == 0)
-                checkFileExistance();
-            ApplyConfiguration(config);
+            }
 
             if (LoggingEnabled)
                 Log(3, "AFT starting up");
@@ -203,9 +204,9 @@ namespace AntiForensicToolkit
                 
 
             // Start the HTTP Listener thread
-            HttpSrv = new Thread(HTTPListener);
-            HttpSrv.IsBackground = true;
-            HttpSrv.Start();
+            //HttpSrv = new Thread(HTTPListener);
+            //HttpSrv.IsBackground = true;
+            //HttpSrv.Start();
 
             m_menu = new ContextMenu();
             m_menu.MenuItems.Add(0,
@@ -489,10 +490,8 @@ namespace AntiForensicToolkit
          */
         private void EnableDMS_Click(object sender, EventArgs e)
         {
-            //MessageBox.Show("HelloDMS");
-            if (Device != "")
+            if (DMSDevices.Count > 0)
             {
-               
                 if (LoggingEnabled)
                     Log(3, "DMS ENABLED");
                 this.Show();
@@ -593,10 +592,7 @@ namespace AntiForensicToolkit
                         HostData.Items.Add(new ListViewItem(new[] { " - ", HostName.Text, HostIp.Text, HostPort.Text, authHash }));
                         TestData.Items.Add(new ListViewItem(new[] { HostName.Text, HostIp.Text, HostPort.Text, "-", "-", "-", "-", "-" }));
 
-                        //FriendlyHostList.Items.Add(HostName.Text);
                         HostName.Text = "";
-
-                        //Hosts.Items.Add(HostIp.Text + ":" + HostPort.Text.Trim() + " - " + authHash);
                         HostIp.Text = "";
                         HostPort.Text = "";
                         HostPassword.Text = "";
@@ -660,44 +656,12 @@ namespace AntiForensicToolkit
          */
         private void GetUSBBaseline_Click(object sender, EventArgs e)
         {
-            // Clean previous results.
-            DMSDevice.Items.Clear();
-            BaselineUSBDevices.Items.Clear();
-            TempBaseline.Items.Clear();
-
-            var usbDevices = GetUSBDevices();
-            foreach (var usbDevice in usbDevices)
-            {
-                BaselineUSBDevices.Items.Add(usbDevice.DeviceID.ToString());
-            }
+            DetectingDMS = true;
+            Thread workerThread = new Thread(DetectNewDMS);
+            workerThread.Start();
         }
 
-        /*
-         * Identifies DMS (Compares connected USB devices against Basline list)
-         * 
-         */
-        private void IdentifyUSB_Click(object sender, EventArgs e)
-        {
-            DMSDevice.Items.Clear();
-            TempBaseline.Items.Clear();
 
-            var usbDevices = GetUSBDevices();
-
-            foreach (var usbDevice in usbDevices)
-            {
-                string deviceID = usbDevice.DeviceID.ToString();
-                TempBaseline.Items.Add(usbDevice.DeviceID.ToString());
-                DMSDevice.Items.Add(usbDevice.DeviceID.ToString());
-            }
-            foreach (var objLib in TempBaseline.Items)
-            {
-                if (!BaselineUSBDevices.Items.Contains(objLib))
-                {
-                    DMSDevice.Text = objLib.ToString();
-                    Device = objLib.ToString();
-                }
-            }
-        }
 
         /*
          * Save our DMS password and deviceID in global variables.
@@ -705,16 +669,35 @@ namespace AntiForensicToolkit
          */
         private void SaveDMS_Click(object sender, EventArgs e)
         {
-            if (DMSDevice.Items.Count > 0 && DMSPassword.Text != "")
+            string dmsName = "";
+            string dmsId = "";
+            string dmsEvent = "";
+            if (DMSID.TextLength > 0)
             {
-                Device = DMSDevice.SelectedItem.ToString();
-                Password = CalculateMD5(DMSPassword.Text);
-                if(LoggingEnabled)
-                    Log(3, "DMS device saved");
+                dmsId = DMSID.Text;
+
+                if (DMSName.Text != "")
+                {
+                    dmsName = DMSName.Text;
+                    if (DMSEvent.SelectedIndex != -1 && DMSEvent.SelectedItem.ToString() != "")
+                    {
+                        dmsEvent = DMSEvent.SelectedItem.ToString();
+
+                        DMSDeviceList.Items.Add(new ListViewItem(new[] { "False", dmsEvent, dmsName, dmsId }));
+                        DMSID.Text = "";
+                        DMSName.Text = "";
+                        if (LoggingEnabled)
+                            Log(3, "DMS device saved");
+                    }
+                    else
+                        MessageBox.Show("You need to specify an event");
+                }
+                
+                
             }
             else
             {
-                MessageBox.Show("You need to specify the device ID and password");
+                MessageBox.Show("No DMS device has been selected");
             }
         }
 
@@ -724,9 +707,9 @@ namespace AntiForensicToolkit
          */
         private void ClearDMS_Click(object sender, EventArgs e)
         {
-            DMSDevice.Items.Clear();
-            BaselineUSBDevices.Items.Clear();
-            TempBaseline.Items.Clear();
+            DMSID.Text = "";
+            DMSName.Text = "";
+            //DMSPassword.Text = "";
         }
 
 
@@ -769,25 +752,7 @@ namespace AntiForensicToolkit
         }
         private void PasswordCheck_KeyUp(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Enter)
-            {
-                if (CalculateMD5(PasswordCheck.Text) != Password)
-                {
-                    // Not correct? Lets panic.
-                    Panic();
-                    //this.Opacity = 100;
-                    PasswordCheck.Hide();
-                    PasswordCheck.Text = "";
-                }
-                else
-                {
-                    // Correct, disable our switches :)
-                    DMSEnabled = false;
-                    this.Opacity = 100;
-                    PasswordCheck.Hide();
-                    PasswordCheck.Text = "";
-                }
-            }
+
         }
 
 
@@ -808,45 +773,39 @@ namespace AntiForensicToolkit
          */
         private void UDPListen_CheckedChanged(object sender, EventArgs e)
         {
-            if (UDPListen.Checked)
-            {
-                UDPPort.Enabled = true;
-                Forward.Enabled = true;
-                UseBroadcast.Enabled = true;
-                AllowTesting.Enabled = true;
-            }
-            else
-            {
-                UDPPort.Enabled = false;
-                Forward.Enabled = false;
-                Forward.Checked = false;
-                UseBroadcast.Enabled = false;
-                UseBroadcast.Checked = false;
-                AllowTesting.Enabled = false;
-                AllowTesting.Checked = false;
-            }
             UdpSrv = new Thread(new ThreadStart(UDPListener));
             UdpSrv.IsBackground = true;
 
             if (UDPListen.Checked)
             {
+                UDPPort.Enabled = true;
+                Forward.Enabled = true;
+                UseBroadcast.Enabled = true;
+                RemoteDMS.Enabled = true;
+                ReceiveConfig.Enabled = true;
+                AllowTesting.Enabled = true;
                 UDP = true;
                 UdpSrv.Start();
                 if (LoggingEnabled)
                     Log(3, "UDP listener started");
-                ReceiveConfig.Enabled = true;
-                RemoteDMS.Enabled = true;
             }
             else
             {
+                Forward.Enabled = false;
+                Forward.Checked = false;
+                UseBroadcast.Enabled = false;
+                UseBroadcast.Checked = false;
+                RemoteDMS.Enabled = false;
+                RemoteDMS.Checked = false;
+                ReceiveConfig.Enabled = false;
+                ReceiveConfig.Checked = false;
+                AllowTesting.Enabled = false;
+                AllowTesting.Checked = false;
                 UDP = false;
                 UdpSrv.Abort();
+                UDPBroadcast("127.0.0.1:"+UDPPort.Text, "KILL");
                 if (LoggingEnabled)
                     Log(2, "UDP listener stopped!");
-                ReceiveConfig.Checked = false;
-                ReceiveConfig.Enabled = false;
-                RemoteDMS.Checked = false;
-                RemoteDMS.Enabled = false;
             }
         }
 
@@ -1014,14 +973,14 @@ namespace AntiForensicToolkit
             if (Autostart.Checked)
             {
                 rkApp.SetValue("AFT", Application.ExecutablePath.ToString());
-                AutostartTP = true;
+                AutostartAFT = true;
                 if(LoggingEnabled)
                     Log(3, "Added to autostart");
             }
             else
             {
                 rkApp.DeleteValue("AFT", false);
-                AutostartTP = false;
+                AutostartAFT = false;
                 if (LoggingEnabled)
                     Log(3, "Removed from autostart");
             }
@@ -1091,27 +1050,6 @@ namespace AntiForensicToolkit
                     Log(3, "Logging disabled");
             }
         }
-
-        /*
-         * Setting our bool ( Password authentication use )
-         * 
-         */
-        private void PasswordAuthentication_CheckedChanged(object sender, EventArgs e)
-        {
-            if (PasswordAuthentication.Checked)
-            {
-                UsePassword = true;
-                if (LoggingEnabled)
-                    Log(3, "Using password authentication when DMS disable");
-            }
-            else
-            {
-                UsePassword = false;
-                if (LoggingEnabled)
-                    Log(2, "Only using USB device as authentication!");
-            }
-        }
-
 
         /*
          * Setting our bool ( Configuration updates )
@@ -1201,25 +1139,33 @@ namespace AntiForensicToolkit
         {
             if (AllowTesting.Checked)
             {
-                MessageBox.Show("Allowing testing will ONLY allow testing, hence no panics, DMS or configuration updates will be possible during this time!\n\nSHUT THIS OFF WHEN YOU ARE DONE!",
-                    "Critical Warning",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Exclamation,
-                    MessageBoxDefaultButton.Button1);
+                MessageBox.Show("Testing only works with local addresses so far!");
                 Testing = true;
+                if (LoggingEnabled)
+                    Log(3, "Testing enabled");
             }
             else
             {
                 Testing = false;
+                if (LoggingEnabled)
+                    Log(3, "Testing disabled");
             }
         }
 
         private void NetworkProtect_CheckedChanged(object sender, EventArgs e)
         {
             if (NetworkProtect.Checked)
+            {
                 NetworkProtection = true;
+                if (LoggingEnabled)
+                    Log(3, "Network protection enabled");
+            }
             else
+            {
                 NetworkProtection = false;
+                if (LoggingEnabled)
+                    Log(2, "Network protection disabled!");
+            }
         }
 
         private void ManualHostCheck_Click(object sender, EventArgs e)
@@ -1378,6 +1324,66 @@ namespace AntiForensicToolkit
             }
         }
 
+        public void DetectNewDMS()
+        {
+            DateTime start = DateTime.Now;
+            DateTime end = start.AddSeconds(15);
+            DateTime now = new DateTime();
+            ArrayList baselineDevices = GetDevices();
+            ArrayList newDevices = new ArrayList();
+            while(DetectingDMS)
+            {
+                now = DateTime.Now;
+                int result = DateTime.Compare(now, end);
+                this.Invoke((MethodInvoker)delegate
+                {
+                    int countdown = 15 - (now - start).Seconds;
+                    DMSDetectCountDown.Text = countdown.ToString();
+                });
+                if (result > 0)
+                {
+                    this.Invoke((MethodInvoker)delegate { DMSDetectCountDown.Text = "No device was detected!"; });
+                    return;
+                }
+                newDevices = GetDevices();
+                foreach (string device in newDevices)
+                {
+                    if (!baselineDevices.Contains(device) && !device.Equals(Device))
+                    {
+                        bool exists = false;
+                        for (int i = 0; i < DMSDeviceList.Items.Count; i++)
+                        {
+                            this.Invoke((MethodInvoker)delegate
+                            {
+                                if (device.Equals(DMSDeviceList.Items[i].SubItems[3].Text))
+                                    exists = true;
+                            });
+                        }
+
+                        if (!exists)
+                        {
+                            this.Invoke((MethodInvoker)delegate
+                            {
+                                this.Invoke((MethodInvoker)delegate { DMSDetectCountDown.Text = "Device found!"; });
+                                DMSID.Text = device;
+                            });
+                            DetectingDMS = false;
+                            return;
+                        }
+                        else
+                        {
+                            this.Invoke((MethodInvoker)delegate { DMSDetectCountDown.Text = "Duplicate device!"; });
+                            DetectingDMS = false;
+                            return;
+                        }
+                    }
+                }
+                
+            }
+        }
+
+        [DllImport("user32")]
+        public static extern void LockWorkStation();
 
         /*
          * DMS - Check to see if the mouse has been touched, is our DMS USB plugged in? 
@@ -1398,47 +1404,56 @@ namespace AntiForensicToolkit
             while (DMSEnabled == true)
             {
                 // Check if any unrecognized USB device is plugged in.
-                if (USBProtection)
+                newDevices = GetDevices();
+
+                foreach (string device in newDevices) // Loop through the device list.
                 {
-                    newDevices = GetDevices();
-                    foreach (string device in newDevices)
+                    if (!baselineDevices.Contains(device)) // Baseline does not contain the new USB device.
                     {
-                        if (!baselineDevices.Contains(device) && !device.Equals(Device))
+                        if (USBProtection && !DMSDevices.Contains(device)) // USB protection enabled and device is not recognized, panic!
                         {
                             DMSEnabled = false;
                             Panic();
-                            break;
                         }
-
-                        if(device.Equals(Device) && !UsePassword)
+                        if (DMSDevices.Contains(device)) // Our plugged in device is in our saved device-list, perform actions.
                         {
-                            if (LoggingEnabled)
-                                Log(3, "DMS disabled using USB key only!");
-
-                            DMSEnabled = false;
-                            break;
+                            for (int i = 0; i < DMSDevices.Count; i++) // Loop through saved devices
+                            {
+                                if (DMSDevices[i].Equals(device)) // Device found
+                                {
+                                    if (DMSEvents[i].Equals("Key"))
+                                    {
+                                        if (LoggingEnabled)
+                                            Log(2, "DMS Disabled with key device");
+                                        DMSEnabled = false;
+                                        break;
+                                    }
+                                    if (DMSEvents[i].Equals("Panic"))
+                                    {
+                                        DMSEnabled = false;
+                                        Panic();
+                                        break;
+                                    }
+                                    if (DMSEvents[i].Equals("Lock"))
+                                    {
+                                        LockWorkStation();
+                                        if (LoggingEnabled)
+                                            Log(2, "Desktop locked with device");
+                                    }
+                                }
+                            }
                         }
                     }
-                    newDevices.Clear();
-                    newDevices.TrimToSize();
                 }
 
 
                 // Check if the mouse position is out of the accepted area.
                 if (Cursor.Position.X > maximumX || Cursor.Position.X < minimumX || Cursor.Position.Y > maximumY || Cursor.Position.Y < minimumY)
                 {
-                    if (checkDMS() == true)
-                    {
-                        // Everything seems fine and dandy
-                        break;
-                    }
-                    else
-                    {
-                        // Okay, lets panic.
-                        DMSEnabled = false;
-                        Panic();
-                        break;
-                    }
+                    // Okay, lets panic.
+                    DMSEnabled = false;
+                    Panic();
+                    break;
                 }
 
                 // User has enabled the AC power protection (Unplugging AC will cause panics!)
@@ -1465,6 +1480,7 @@ namespace AntiForensicToolkit
          */
         public void Panic()
         {
+            MessageBox.Show("PANIC!");
             if(UnmountTC)
                 UnmountEncryptedPartitions();
             if(Transmit)
@@ -1562,7 +1578,6 @@ namespace AntiForensicToolkit
          */
         public void UDPBroadcast(string host, string data)
         {
-            //MessageBox.Show("Sending to: " + host + "\n\n" + data);
             string[] hostData = host.Split(':');
             string ip = hostData[0];
             string port = hostData[1];
@@ -1587,11 +1602,9 @@ namespace AntiForensicToolkit
                 
                 sending_socket.SendTo(send_buffer, sending_end_point);
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                //MessageBox.Show(e.ToString());
-                //if(LoggingEnabled)
-                 //   Log(1, "Could not send panic signal to " + host);
+
             }
         }
 
@@ -1634,32 +1647,36 @@ namespace AntiForensicToolkit
         public void HTTPListener()
         {
             HttpListener listener = new HttpListener();
-            string localServerAddr = "http://*:" + HTTPPort.Text + "/panic/";
-            listener.Prefixes.Add(localServerAddr);
-            try
+            while (HTTP)
             {
-                listener.Start();
-                IAsyncResult result = listener.BeginGetContext(new AsyncCallback(ListenerCallback), listener);
-                result.AsyncWaitHandle.WaitOne();
-                Panic();
-                listener.Stop();
-                return;
-            }
-            catch (Exception e)
-            {
-                if (e.GetType().ToString() == "System.Net.HttpListenerException")
+                string localServerAddr = "http://*:" + HTTPPort.Text + "/panic/";
+                listener.Prefixes.Add(localServerAddr);
+                try
                 {
-                    if (LoggingEnabled)
-                        Log(1, "Could not start HTTP listener!");
-                    MessageBox.Show("Could not start HTTP Listener! \rPlease check that your current HTTP port is not in use!\rPort 8080 could be used by Skype.",
-                    "Critical Warning",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Exclamation,
-                    MessageBoxDefaultButton.Button1);
+                    listener.Start();
+                    IAsyncResult result = listener.BeginGetContext(new AsyncCallback(ListenerCallback), listener);
+                    result.AsyncWaitHandle.WaitOne();
+                    Panic();
+                    listener.Prefixes.Remove(localServerAddr);
+                    //listener.Stop();
+                    //return;
+                }
+                catch (Exception e)
+                {
+                    if (e.GetType().ToString() == "System.Net.HttpListenerException")
+                    {
+                        if (LoggingEnabled)
+                            Log(1, "Could not start HTTP listener!");
+                        MessageBox.Show("Could not start HTTP Listener! \rPlease check that your current HTTP port is not in use!\rPort 8080 could be used by Skype.",
+                        "Critical Warning",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Exclamation,
+                        MessageBoxDefaultButton.Button1);
+                        return;
+                    }
+                    listener.Prefixes.Remove(localServerAddr);
                     return;
                 }
-                listener.Prefixes.Remove(localServerAddr);
-                return;
             }
         }
 
@@ -1673,17 +1690,6 @@ namespace AntiForensicToolkit
             HttpListenerContext context = listener.EndGetContext(result);
         }
 
-
-        public void SetTestResults(int id, int field, bool ok)
-        {
-            if (ok)
-            {
-                TestData.Items[id].UseItemStyleForSubItems = false;
-                TestData.Items[id].SubItems[field].BackColor = Color.Green;
-            }
-        }
-
-
         /*
          *  Starts a UDP Listener to recieve broadcasts
          *  
@@ -1692,41 +1698,39 @@ namespace AntiForensicToolkit
         {
             int listenPort = Convert.ToInt32(UDPPort.Text);
             bool done = false;
-
-            try
-            {
-                UdpClient listener = new UdpClient(listenPort);
-                IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, listenPort);
-                string received_data;
-                byte[] receive_byte_array;
-
-                while (!done)
+                try
                 {
-                    receive_byte_array = listener.Receive(ref groupEP);
-                    received_data = Encoding.ASCII.GetString(receive_byte_array, 0, receive_byte_array.Length);
-                    received_data = received_data.Replace("\\x", "");
-                    received_data = received_data.Replace("/", "");
-                    received_data = DecodeFrom64(received_data); // Data is encoded using base64, decode it.
-                    //MessageBox.Show(received_data);
-                    if (!Testing)
+                    UdpClient listener = new UdpClient(listenPort);
+                    IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, listenPort);
+                    string received_data;
+                    byte[] receive_byte_array;
+                    
+                    while (UDP)
                     {
+                        receive_byte_array = listener.Receive(ref groupEP);
+                        received_data = Encoding.ASCII.GetString(receive_byte_array, 0, receive_byte_array.Length);
+                        received_data = received_data.Replace("\\x", "");
+                        received_data = received_data.Replace("/", "");
+                        received_data = DecodeFrom64(received_data); // Data is encoded using base64, decode it.
+
                         bool foundAuthParam = received_data.StartsWith(AuthParam);
                         bool foundDMSParam = received_data.StartsWith(DMSParam);
                         bool foundPanicParam = received_data.StartsWith(PanicParam);
                         bool foundUnmountParam = received_data.StartsWith(UnmountParam);
                         bool foundConfParam = received_data.StartsWith(ConfParam);
 
-                        if (received_data == AuthorizationKey.ToLower() && UDP == true)
-                            Panic();
-                        else
-                            listener.Close();
+                        if (received_data == AuthorizationKey.ToLower())
+                            Panic(); 
 
                         if (foundUnmountParam)
                         {
                             string[] auth = Regex.Split(received_data, "&AFTAuth=");
                             if (AuthorizationKey.Equals(auth[1].ToString()))
                             {
-                                UnmountEncryptedPartitions();
+                                this.Invoke((MethodInvoker)delegate
+                                {
+                                    UnmountEncryptedPartitions();
+                                });
                             }
                         }
                         if (foundDMSParam)
@@ -1761,10 +1765,11 @@ namespace AntiForensicToolkit
 
                                 this.Invoke((MethodInvoker)delegate
                                 {
-                                    ArrayList config = checkConfiguration();
                                     HostData.Items.Clear();
                                     TestData.Items.Clear();
-                                    ApplyConfiguration(config);
+                                    DMSDeviceList.Items.Clear();
+                                    KillProcessList.Items.Clear();
+                                    ApplyConfiguration();
                                 });
 
 
@@ -1772,179 +1777,244 @@ namespace AntiForensicToolkit
                                     Log(2, "Received configuration file!");
                             }
                         }
-                    }
-                    else
-                    {
-                        bool foundConfirmParam = received_data.StartsWith(ConfirmParam);
-                        bool foundTestParam = received_data.StartsWith(TestParam);
-                        bool foundIdParam = received_data.StartsWith(IDParam);
-
-                        if (foundTestParam) // We have received a test signal
+                        if (Testing)
                         {
-                            received_data = received_data.Replace(TestParam + "&", "");
+                            bool foundConfirmParam = received_data.StartsWith(ConfirmParam);
+                            bool foundTestParam = received_data.StartsWith(TestParam);
+                            bool foundIdParam = received_data.StartsWith(IDParam);
 
-                            bool foundSrcParam = received_data.StartsWith(srcParam);
-
-                            if (foundSrcParam) // To test we need to know where to send the ACK.
+                            if (foundTestParam) // We have received a test signal
                             {
-                                string[] testData = received_data.Split('&');
-                                string host = testData[0].Replace(srcParam, "");
-                                string hostID = "";
-                                string Confirm = "";
+                                received_data = received_data.Replace(TestParam + "&", "");
 
-                                for (int i = 0; i < testData.Count(); i++)
+                                bool foundSrcParam = received_data.StartsWith(srcParam);
+
+                                if (foundSrcParam) // To test we need to know where to send the ACK.
                                 {
-                                    foundIdParam = testData[i].StartsWith(IDParam);
+                                    string[] testData = received_data.Split('&');
+                                    string host = testData[0].Replace(srcParam, "");
+                                    string hostID = "";
+                                    string Confirm = "";
+
+                                    for (int i = 0; i < testData.Count(); i++)
+                                    {
+                                        foundIdParam = testData[i].StartsWith(IDParam);
+                                        if (foundIdParam)
+                                        {
+                                            hostID = testData[i].Replace(IDParam, "");
+                                        }
+                                    }
+
+                                    Confirm = ConfirmParam + "&" + IDParam + hostID;
+
+                                    for (int i = 0; i < testData.Count(); i++)
+                                    {
+                                        foundDMSParam = testData[i].StartsWith(DMSParam);
+                                        foundConfParam = testData[i].StartsWith(ConfParam);
+                                        foundAuthParam = testData[i].StartsWith(AuthParam);
+                                        foundPanicParam = testData[i].StartsWith(PanicParam);
+                                        foundUnmountParam = testData[i].StartsWith(UnmountParam);
+
+
+                                        if (foundDMSParam)
+                                        {
+                                            if (LoggingEnabled)
+                                                Log(3, "Recieved DMS test from " + host);
+                                            Confirm += "&" + DMSParam;
+                                        }
+                                        if (foundConfParam)
+                                        {
+                                            if (LoggingEnabled)
+                                                Log(3, "Recieved configuration test from " + host);
+                                            Confirm += "&" + ConfParam;
+                                        }
+                                        if (foundPanicParam)
+                                        {
+                                            if (LoggingEnabled)
+                                                Log(3, "Recieved panic test from " + host);
+                                            Confirm += "&" + PanicParam;
+                                        }
+                                        if (foundAuthParam)
+                                        {
+                                            if (LoggingEnabled)
+                                                Log(3, "Recieved auth test from " + host);
+                                            string auth = testData[i].Replace(AuthParam, "");
+                                            if (AuthorizationKey == auth)
+                                            {
+                                                Confirm += "&" + AuthParam;
+
+                                                this.Invoke((MethodInvoker)delegate
+                                                {
+                                                    if (LoggingEnabled)
+                                                        Log(2, "Received auth test from " + host);
+                                                });
+
+                                            }
+                                            else
+                                            {
+                                                this.Invoke((MethodInvoker)delegate
+                                                {
+                                                    if (LoggingEnabled)
+                                                        Log(2, "Received auth test from " + host + " - FAILED!");
+                                                });
+                                            }
+                                        }
+                                        if (foundUnmountParam)
+                                        {
+                                            if (LoggingEnabled)
+                                                Log(3, "Recieved unmount test from " + host);
+                                            Confirm += "&" + UnmountParam;
+                                        }
+
+                                    }
+                                    UDPBroadcast(host, Confirm);
+                                }
+                            }
+
+                            if (foundConfirmParam) // We have received a confirm signal 
+                            {
+                                foundDMSParam = false;
+                                foundConfParam = false;
+                                foundAuthParam = false;
+                                foundPanicParam = false;
+                                foundUnmountParam = false;
+
+                                received_data = received_data.Replace(ConfirmParam + "&", "");
+
+                                string[] confirmData = received_data.Split('&');
+                                int id = 0;
+
+                                for (int i = 0; i < confirmData.Count(); i++)
+                                {
+                                    foundIdParam = confirmData[i].StartsWith(IDParam);
                                     if (foundIdParam)
-                                    {
-                                        hostID = testData[i].Replace(IDParam, "");
-                                    }
+                                        id = int.Parse(confirmData[i].Replace(IDParam, ""));
+                                }
+                                this.Invoke((MethodInvoker)delegate
+                                {
+                                    TestData.Items[id].UseItemStyleForSubItems = false;
+                                });
+
+                                for (int i = 0; i < confirmData.Count(); i++)
+                                {
+                                    if (confirmData[i].StartsWith(DMSParam))
+                                        foundDMSParam = confirmData[i].StartsWith(DMSParam);
+                                    if (confirmData[i].StartsWith(ConfParam))
+                                        foundConfParam = confirmData[i].StartsWith(ConfParam);
+                                    if (confirmData[i].StartsWith(AuthParam))
+                                        foundAuthParam = confirmData[i].StartsWith(AuthParam);
+                                    if (confirmData[i].StartsWith(PanicParam))
+                                        foundPanicParam = confirmData[i].StartsWith(PanicParam);
+                                    if (confirmData[i].StartsWith(UnmountParam))
+                                        foundUnmountParam = confirmData[i].StartsWith(UnmountParam);
                                 }
 
-                                Confirm = ConfirmParam + "&" + IDParam + hostID;
-
-                                for (int i = 0; i < testData.Count(); i++)
+                                if (foundUnmountParam)
                                 {
-                                    bool foundDMSParam = testData[i].StartsWith(DMSParam);
-                                    bool foundConfParam = testData[i].StartsWith(ConfParam);
-                                    bool foundAuthParam = testData[i].StartsWith(AuthParam);
-                                    bool foundPanicParam = testData[i].StartsWith(PanicParam);
-                                    bool foundUnmountParam = testData[i].StartsWith(UnmountParam);
-                                    //foundIdParam = testData[i].StartsWith(IDParam);
-
-
-                                    if (foundDMSParam)
+                                    this.Invoke((MethodInvoker)delegate
                                     {
-                                        //MessageBox.Show("Got DMS test");
-                                        Confirm += "&" + DMSParam;
-                                        //UDPBroadcast(host, ConfirmParam + "&" + IDParam + hostID + "&" + DMSParam);
-                                    }
-                                    if (foundConfParam)
-                                    {
-                                        Confirm += "&" + ConfParam;
-                                        //MessageBox.Show("Got Config test");
-                                        //UDPBroadcast(host, ConfirmParam + "&" + IDParam + hostID + "&" + ConfParam);
-                                    }
-                                    if (foundPanicParam)
-                                    {
-                                        Confirm += "&" + PanicParam;
-                                        //MessageBox.Show("Got Panic test");
-                                        //UDPBroadcast(host, ConfirmParam + "&" + IDParam + hostID + "&" + PanicParam);
-                                    }
-                                    if (foundAuthParam)
-                                    {
-                                        
-                                        //MessageBox.Show("Got Auth test");
-                                        string auth = testData[i].Replace(AuthParam, "");
-                                        if (AuthorizationKey == auth)
-                                            Confirm += "&" + AuthParam;
-                                    }
-                                    if (foundUnmountParam)
-                                    {
-                                        Confirm += "&" + UnmountParam;
-                                        //MessageBox.Show("Got Unmount test");
-                                        //UDPBroadcast(host, ConfirmParam + "&" + IDParam + hostID + "&" + UnmountParam);
-                                    }
-
+                                        TestData.Items[id].SubItems[3].BackColor = Color.Green;
+                                        TestData.Items[id].SubItems[3].Text = "YES";
+                                        if (LoggingEnabled)
+                                            Log(3, "Unmount OK from " + TestData.Items[id].SubItems[0].Text);
+                                    });
                                 }
-                                UDPBroadcast(host, Confirm);
+                                else
+                                {
+                                    this.Invoke((MethodInvoker)delegate
+                                    {
+                                        if (LoggingEnabled)
+                                            Log(2, "Unmount FAILED from " + TestData.Items[id].SubItems[0].Text);
+                                    });
+                                }
+                                if (foundPanicParam)
+                                {
+                                    this.Invoke((MethodInvoker)delegate
+                                    {
+                                        TestData.Items[id].SubItems[4].BackColor = Color.Green;
+                                        TestData.Items[id].SubItems[4].Text = "YES";
+                                        if (LoggingEnabled)
+                                            Log(3, "Panic OK from " + TestData.Items[id].SubItems[0].Text);
+                                    });
+                                }
+                                else
+                                {
+                                    this.Invoke((MethodInvoker)delegate
+                                    {
+                                        if (LoggingEnabled)
+                                            Log(2, "Panic FAILED from " + TestData.Items[id].SubItems[0].Text);
+                                    });
+                                }
+                                if (foundDMSParam)
+                                {
+                                    this.Invoke((MethodInvoker)delegate
+                                    {
+                                        TestData.Items[id].SubItems[5].BackColor = Color.Green;
+                                        TestData.Items[id].SubItems[5].Text = "YES";
+                                        if (LoggingEnabled)
+                                            Log(3, "DMS OK from " + TestData.Items[id].SubItems[0].Text);
+                                    });
+                                }
+                                else
+                                {
+                                    this.Invoke((MethodInvoker)delegate
+                                    {
+                                        if (LoggingEnabled)
+                                            Log(2, "DMS FAILED from " + TestData.Items[id].SubItems[0].Text);
+                                    });
+                                }
+                                if (foundConfParam)
+                                {
+                                    this.Invoke((MethodInvoker)delegate
+                                    {
+                                        TestData.Items[id].SubItems[6].BackColor = Color.Green;
+                                        TestData.Items[id].SubItems[6].Text = "YES";
+                                        if (LoggingEnabled)
+                                            Log(3, "Config OK from " + TestData.Items[id].SubItems[0].Text);
+                                    });
+                                }
+                                else
+                                {
+                                    this.Invoke((MethodInvoker)delegate
+                                    {
+                                        if (LoggingEnabled)
+                                            Log(2, "Config FAILED from " + TestData.Items[id].SubItems[0].Text);
+                                    });
+                                }
+                                if (foundAuthParam)
+                                {
+                                    this.Invoke((MethodInvoker)delegate
+                                    {
+                                        TestData.Items[id].SubItems[7].BackColor = Color.Green;
+                                        TestData.Items[id].SubItems[7].Text = "YES";
+                                        if (LoggingEnabled)
+                                            Log(3, "Auth OK from " + TestData.Items[id].SubItems[0].Text);
+                                    });
+                                }
+                                else
+                                {
+                                    this.Invoke((MethodInvoker)delegate
+                                    {
+                                        if (LoggingEnabled)
+                                            Log(2, "Auth FAILED from " + TestData.Items[id].SubItems[0].Text);
+                                    });
+                                }
+
                             }
                         }
-
-                        if (foundConfirmParam) // We have received a confirm signal 
-                        {
-                            bool foundDMSParam = false;
-                            bool foundConfParam = false;
-                            bool foundAuthParam = false;
-                            bool foundPanicParam = false;
-                            bool foundUnmountParam = false;
-
-                            received_data = received_data.Replace(ConfirmParam + "&", "");
-
-                            string[] confirmData = received_data.Split('&');
-                            int id = 0;
-
-                            for (int i = 0; i < confirmData.Count(); i++)
-                            {
-                                foundIdParam = confirmData[i].StartsWith(IDParam);
-                                if (foundIdParam)
-                                    id = int.Parse(confirmData[i].Replace(IDParam, ""));
-                            }
-                            this.Invoke((MethodInvoker)delegate
-                            {
-                                TestData.Items[id].UseItemStyleForSubItems = false;
-                            });
-
-                            for (int i = 0; i < confirmData.Count(); i++)
-                            {
-                                if(confirmData[i].StartsWith(DMSParam))
-                                    foundDMSParam = confirmData[i].StartsWith(DMSParam);
-                                if (confirmData[i].StartsWith(ConfParam))
-                                    foundConfParam = confirmData[i].StartsWith(ConfParam);
-                                if (confirmData[i].StartsWith(AuthParam))
-                                    foundAuthParam = confirmData[i].StartsWith(AuthParam);
-                                if (confirmData[i].StartsWith(PanicParam))
-                                    foundPanicParam = confirmData[i].StartsWith(PanicParam);
-                                if (confirmData[i].StartsWith(UnmountParam))
-                                    foundUnmountParam = confirmData[i].StartsWith(UnmountParam);
-                            }
-
-                            if (foundUnmountParam)
-                            {
-                                this.Invoke((MethodInvoker)delegate
-                                {
-                                    TestData.Items[id].SubItems[3].BackColor = Color.Green;
-                                    TestData.Items[id].SubItems[3].Text = "YES";
-                                });
-                            }
-                            if (foundPanicParam)
-                            {
-                                this.Invoke((MethodInvoker)delegate
-                                {
-                                    TestData.Items[id].SubItems[4].BackColor = Color.Green;
-                                    TestData.Items[id].SubItems[4].Text = "YES";
-                                });
-                            }
-                            if (foundDMSParam)
-                            {
-                                this.Invoke((MethodInvoker)delegate
-                                {
-                                    TestData.Items[id].SubItems[5].BackColor = Color.Green;
-                                    TestData.Items[id].SubItems[5].Text = "YES";
-                                });
-                            }
-                            if (foundConfParam)
-                            {
-                                this.Invoke((MethodInvoker)delegate
-                                {
-                                    TestData.Items[id].SubItems[6].BackColor = Color.Green;
-                                    TestData.Items[id].SubItems[6].Text = "YES";
-                                });
-                            }
-                            if (foundAuthParam)
-                            {
-                                this.Invoke((MethodInvoker)delegate
-                                {
-                                    TestData.Items[id].SubItems[7].BackColor = Color.Green;
-                                    TestData.Items[id].SubItems[7].Text = "YES";
-                                });
-                            }
-
-                        }
-                    }                    
+                    } listener.Close();
                 }
-            }
-            catch (Exception)
-            {
-                
-            }
+                catch (Exception)
+                {
+
+                }
         }
 
         /*
          * Check if a TrueCrypt executable exists in our guessed location.
          * 
          */
-        private void checkFileExistance()
+        private void checkFileExistance(string FilePath)
         {
             bool FileExists = File.Exists(FilePath);
             if (FileExists)
@@ -1952,40 +2022,45 @@ namespace AntiForensicToolkit
                 DialogResult dialogResult = MessageBox.Show("We found Truecrypt.exe for you, is this correct?\n" + FilePath, "Found truecrypt file", MessageBoxButtons.YesNo);
                 if (dialogResult == DialogResult.No)
                 {
+                    OpenFileDialog openFileDialog1 = new OpenFileDialog();
+
+                    openFileDialog1.InitialDirectory = @"C:\Program Files\";
+                    openFileDialog1.Filter = "Executable files (*.exe)|*.exe";
+                    openFileDialog1.FilterIndex = 2;
+                    openFileDialog1.RestoreDirectory = true;
+
+                    if (openFileDialog1.ShowDialog() == DialogResult.OK)
+                    {
+                        FilePath = openFileDialog1.FileName.ToString();
+                    }
+                }
+                else
+                {
+
+                }
+            }
+            else if(!FileExists || FilePath == "")
+            {
+                DialogResult dialogResult = MessageBox.Show("AFT was unable to locate TrueCrypt.exe! \nLocate now?", "Could not find TrueCrypt.exe", MessageBoxButtons.YesNo);
+                if (dialogResult == DialogResult.No)
+                {
                     FilePath = "";
                 }
                 else
                 {
-                    if (LoggingEnabled)
-                        Log(3, "Found TrueCrypt.exe");
+                    OpenFileDialog openFileDialog1 = new OpenFileDialog();
+
+                    openFileDialog1.InitialDirectory = @"C:\Program Files\";
+                    openFileDialog1.Filter = "Executable files (*.exe)|*.exe";
+                    openFileDialog1.FilterIndex = 2;
+                    openFileDialog1.RestoreDirectory = true;
+
+                    if (openFileDialog1.ShowDialog() == DialogResult.OK)
+                    {
+                        FilePath = openFileDialog1.FileName.ToString();
+                    }
                 }
             }
-        }
-
-        /*
-         * Read and load our configuration to an ArrayList used by ApplyConfiguration()
-         * 
-         * @returns ArrayList
-         */
-        public static ArrayList checkConfiguration()
-        {
-            bool FileExists = File.Exists("AFTC.ini");
-            ArrayList config = new ArrayList();
-
-            if (FileExists)
-            {
-                string line = "";
-                TextReader tr = new StreamReader("AFTC.ini");
-                int counter = 0;
-                while ((line = tr.ReadLine()) != null)
-                {
-                    string[] options = line.ToString().Split('=');
-                    config.Add(options[1]);
-                    counter++;
-                }
-                tr.Close();
-            }
-            return config;
         }
 
         /*
@@ -1994,19 +2069,26 @@ namespace AntiForensicToolkit
          */
         public void SaveConfiguration()
         {
-            TextWriter tw = new StreamWriter(ConfigFile);
-            tw.WriteLine("FILEPATH=" + FilePath);
-            tw.WriteLine("DEVICE=" + Device);
-            tw.WriteLine("KEY=" + Password);
-            tw.WriteLine("HTTP_LISTEN=" + HTTPListen.Checked.ToString());
-            tw.WriteLine("UNMOUNT=" + Unmount.Checked.ToString());
-            tw.WriteLine("SHUTDOWN=" + ShutPC.Checked.ToString());
-            tw.WriteLine("FORWARD=" + Forward.Checked.ToString());
-            tw.WriteLine("MAX_X=" + X.Text);
-            tw.WriteLine("MAX_Y=" + Y.Text);
-            tw.WriteLine("HTTP=" + HTTPPort.Text);
-            tw.WriteLine("UDP=" + UDPPort.Text);
 
+            // General settings
+            Properties.Settings.Default.TrueCryptPath = FilePath;
+            Properties.Settings.Default.AuthKey = AuthKey.Text;
+            Properties.Settings.Default.HTTPListener = HTTPListen.Checked;
+            Properties.Settings.Default.UDPListener = UDPListen.Checked;
+            
+            Properties.Settings.Default.TransmitToBC = UseBroadcast.Checked;
+            Properties.Settings.Default.TransmitToHosts = Forward.Checked;
+            Properties.Settings.Default.Autostart = Autostart.Checked;
+            Properties.Settings.Default.StartMinimized = StartMinimized.Checked;
+            Properties.Settings.Default.Logging = EnableLogging.Checked;
+            Properties.Settings.Default.AutostartDMS = AutostartDMS.Checked;
+            Properties.Settings.Default.CheckHosts = CheckHosts.Checked;
+            Properties.Settings.Default.ConfigUpdates = ReceiveConfig.Checked;
+            Properties.Settings.Default.RemoteDMS = RemoteDMS.Checked;
+            Properties.Settings.Default.Testing = AllowTesting.Checked;
+            
+
+            // Host settings
             string HostList = "";
             if (HostData.Items.Count > 0)
             {
@@ -2016,28 +2098,39 @@ namespace AntiForensicToolkit
                     string ip = HostData.Items[i].SubItems[2].Text;
                     string port = HostData.Items[i].SubItems[3].Text;
                     string key = HostData.Items[i].SubItems[4].Text;
-                    HostList += name + " @ " + ip + ":" + port + " - " + key + ",";
+                    HostList += name + ";" + ip + ";" + port + ";" + key + ",";
                 }
                 HostList = HostList.Remove(HostList.Length - 1);
             }
+            Properties.Settings.Default.Hosts = HostList;
 
-            tw.WriteLine("WARN=" + HostList);
-            tw.WriteLine("BROADCAST=" + UseBroadcast.Checked.ToString());
-            tw.WriteLine("AC_PROTECTION=" + ACProtect.Checked.ToString());
-            tw.WriteLine("USB_PROTECTION=" + USBProtect.Checked.ToString());
-            tw.WriteLine("SCREENSAVER=" + Screensaver.Checked.ToString());
-            tw.WriteLine("AUTOSTART=" + Autostart.Checked.ToString());
-            tw.WriteLine("START_MINIMIZED=" + StartMinimized.Checked.ToString());
-            tw.WriteLine("LOGGING=" + EnableLogging.Checked.ToString());
-            tw.WriteLine("AUTOSTART_DMS=" + AutostartDMS.Checked.ToString());
-            tw.WriteLine("AUTH_KEY=" + AuthKey.Text);
-            tw.WriteLine("UDP_LISTEN=" + UDPListen.Checked.ToString());
-            tw.WriteLine("CHECK_HOSTS=" + CheckHosts.Checked.ToString());
-            tw.WriteLine("USE_PASSWORD=" + PasswordAuthentication.Checked.ToString());
-            tw.WriteLine("CONF_UPDATES=" + ReceiveConfig.Checked.ToString());
-            tw.WriteLine("REMOTE_DMS=" + RemoteDMS.Checked.ToString());
-            tw.WriteLine("TESTING=" + AllowTesting.Checked.ToString());
-            tw.WriteLine("KILL_PROCESSES=" + KillProcesses.Checked.ToString());
+            // DMS Settings
+            if (DMSDeviceList.Items.Count > 0)
+            {
+                string dmsString = "";
+                for (int i = 0; i < DMSDeviceList.Items.Count; i++)
+                {
+                    dmsString += DMSDeviceList.Items[i].SubItems[0].Text + ";" +
+                        DMSDeviceList.Items[i].SubItems[1].Text + ";" +
+                        DMSDeviceList.Items[i].SubItems[2].Text + ";" +
+                        DMSDeviceList.Items[i].SubItems[3].Text + ","; 
+                }
+                dmsString = dmsString.Remove(dmsString.Length - 1);
+                Properties.Settings.Default.DMSDevices = dmsString;
+            }
+            else
+                Properties.Settings.Default.DMSDevices = "";
+
+            Properties.Settings.Default.Shutdown = ShutPC.Checked;
+            Properties.Settings.Default.Unmount = Unmount.Checked;
+            Properties.Settings.Default.MouseMax_X = int.Parse(X.Text);
+            Properties.Settings.Default.MouseMax_Y = int.Parse(Y.Text);
+            Properties.Settings.Default.ACProtection = ACProtect.Checked;
+            Properties.Settings.Default.USBProtection = USBProtect.Checked;
+            Properties.Settings.Default.Screensaver = Screensaver.Checked;
+            Properties.Settings.Default.NetworkProtection = NetworkProtect.Checked;
+            Properties.Settings.Default.KillProcesses = KillProcesses.Checked;
+
             if (KillProcessList.Items.Count > 0)
             {
                 string pKill = "";
@@ -2046,149 +2139,135 @@ namespace AntiForensicToolkit
                     pKill += KillProcessList.Items[i].ToString() + ",";
                 }
                 pKill = pKill.Remove(pKill.Length - 1);
-                tw.WriteLine("PKILL=" + pKill);
+                Properties.Settings.Default.ProcessList = pKill;
             }
             else
-                tw.WriteLine("PKILL=");
-            tw.WriteLine("NW_PROTECTION=" + NetworkProtect.Checked.ToString());
-            
-            tw.Close();
+                Properties.Settings.Default.ProcessList = "";
+
+            Properties.Settings.Default.Save();
         }
 
         /*
         *  Apply configuration from our config file.
          *  
         */
-        public void ApplyConfiguration(ArrayList config)
+        public void ApplyConfiguration()
         {
-            if (config.Count > 0)
+            
+            // General settings
+            FilePath = Properties.Settings.Default.TrueCryptPath;
+            if (Properties.Settings.Default.AuthKey != "")
             {
-                if (config[0].ToString() == "")
-                    checkFileExistance();
-                else
-                    FilePath = config[0].ToString();
+                AuthorizationKey = Properties.Settings.Default.AuthKey;
+                AuthKey.Text = Properties.Settings.Default.AuthKey;
+                AuthKey.Enabled = false;
+            }
 
-                if (config[1].ToString() != "")
+            HTTPListen.Checked = Properties.Settings.Default.HTTPListener;
+            UDPListen.Checked = Properties.Settings.Default.UDPListener;            
+
+            UseBroadcast.Checked = Properties.Settings.Default.TransmitToBC;
+            Broadcast = Properties.Settings.Default.TransmitToBC;
+
+            Forward.Checked = Properties.Settings.Default.TransmitToHosts;
+            Transmit = Properties.Settings.Default.TransmitToHosts;
+
+            Autostart.Checked = Properties.Settings.Default.Autostart;
+            AutostartAFT = Properties.Settings.Default.Autostart;
+
+            StartMinimized.Checked = Properties.Settings.Default.StartMinimized;
+            MinimizedStartup = Properties.Settings.Default.StartMinimized;
+
+            EnableLogging.Checked = Properties.Settings.Default.Logging;
+            LoggingEnabled = Properties.Settings.Default.Logging;
+
+            AutostartDMS.Checked = Properties.Settings.Default.AutostartDMS;
+            DMSAutostart = Properties.Settings.Default.AutostartDMS;
+
+            CheckHosts.Checked = Properties.Settings.Default.CheckHosts;
+            HostCheck = Properties.Settings.Default.CheckHosts;
+
+            ReceiveConfig.Checked = Properties.Settings.Default.ConfigUpdates;
+            ConfUpdate = Properties.Settings.Default.ConfigUpdates;
+
+            RemoteDMS.Checked = Properties.Settings.Default.RemoteDMS;
+            EnableRemoteDMS = Properties.Settings.Default.RemoteDMS;
+
+            AllowTesting.Checked = Properties.Settings.Default.Testing;
+            Testing = Properties.Settings.Default.Testing;
+
+            string[] HostList = Properties.Settings.Default.Hosts.Split(',');
+            if (HostList.Count() > 0 && Properties.Settings.Default.Hosts != "")
+            {
+                string local = GetLocalAddress();
+                for (int i = 0; i < HostList.Count(); i++)
                 {
-                    Device = config[1].ToString();
-                    DMSDevice.Items.Add(Device);
-                    DMSDevice.Text = Device;
-                }
-
-                if (config[2].ToString() != "")
-                {
-                    Password = config[2].ToString();
-                }
-
-                UnmountTC = Convert.ToBoolean(config[4].ToString());
-                Unmount.Checked = UnmountTC;
-
-                ShutdownPC = Convert.ToBoolean(config[5].ToString());
-                ShutPC.Checked = ShutdownPC;
-
-                Transmit = Convert.ToBoolean(config[6].ToString());
-                Forward.Checked = Transmit;
-
-                Broadcast = Convert.ToBoolean(config[12].ToString());
-                UseBroadcast.Checked = Broadcast;
-               
-                ACProtection = Convert.ToBoolean(config[13].ToString());
-                ACProtect.Checked = ACProtection;
-
-                USBProtection = Convert.ToBoolean(config[14].ToString());
-                USBProtect.Checked = USBProtection;
-
-                UseScreensaver = Convert.ToBoolean(config[15].ToString());
-                Screensaver.Checked = UseScreensaver;
-
-                AutostartTP = Convert.ToBoolean(config[16].ToString());
-                Autostart.Checked = AutostartTP;
-
-                MinimizedStartup = Convert.ToBoolean(config[17].ToString());
-                StartMinimized.Checked = MinimizedStartup;
-
-                DMSAutostart = Convert.ToBoolean(config[19].ToString());
-                AutostartDMS.Checked = DMSAutostart;
-
-                if (config[20].ToString() != "")
-                {
-                    AuthorizationKey = config[20].ToString();
-                    AuthKey.Text = AuthorizationKey;
-                    AuthKey.Enabled = false;
-                }
-                else
-                {
-                    AuthorizationKey = CalculateMD5(PanicParam);
-                }
-
-                UDP = Convert.ToBoolean(config[21].ToString());
-                UDPListen.Checked = UDP;
-
-                HostCheck = Convert.ToBoolean(config[22].ToString());
-                CheckHosts.Checked = HostCheck;
-
-                UsePassword = Convert.ToBoolean(config[23].ToString());
-                PasswordAuthentication.Checked = UsePassword;
-
-                if (UDP)
-                {
-                    ConfUpdate = Convert.ToBoolean(config[24].ToString());
-                    ReceiveConfig.Checked = ConfUpdate;
-                }
-                else
-                    ConfUpdate = false;
-
-                EnableRemoteDMS = Convert.ToBoolean(config[25].ToString());
-                RemoteDMS.Checked = EnableRemoteDMS;
-
-                Testing = Convert.ToBoolean(config[26].ToString());
-                AllowTesting.Checked = Testing;
-
-                KillProc = Convert.ToBoolean(config[27].ToString());
-                KillProcesses.Checked = KillProc;
-
-                string[] KillList = config[28].ToString().Split(',');
-
-                if(KillList.Count() > 0 && KillList[0] != "")
-                    for (int i = 0; i < KillList.Count(); i++)
+                    string[] HostOpt = HostList[i].Split(';');
+                    if (!HostOpt[1].Equals(local)) // Ignore the own local IP when adding hosts
                     {
-                        KillProcessList.Items.Add(KillList[i]);
+                        HostData.Items.Add(new ListViewItem(new[] { " - ", HostOpt[0], HostOpt[1], HostOpt[2], HostOpt[3] }));
+                        TestData.Items.Add(new ListViewItem(new[] { HostOpt[0], HostOpt[1], HostOpt[2], "-", "-", "-", "-", "-" }));
                     }
+                }
+            }
 
-                NetworkProtection = Convert.ToBoolean(config[29].ToString());
-                NetworkProtect.Checked = NetworkProtection;
-
-                maximumXmovement = Convert.ToInt32(config[7]);
-                X.Text = config[7].ToString();
-                maximumYmovement = Convert.ToInt32(config[8]);
-                Y.Text = config[7].ToString();
-
-                HTTPPort.Text = config[9].ToString();
-
-                UDPPort.Text = config[10].ToString();
-
-                string[] WarnList = config[11].ToString().Split(',');
-
-                if(WarnList.Count() > 0 && WarnList[0] != "")
-                    for (int i = 0; i < WarnList.Count(); i++)
+            // DMS Settings
+            
+            string[] DMSList = Properties.Settings.Default.DMSDevices.Split(',');
+            if (DMSList.Count() > 0 && Properties.Settings.Default.DMSDevices != "")
+            {
+                
+                for (int i = 0; i < DMSList.Count(); i++)
+                {
+                    MessageBox.Show(DMSList[i]);
+                    string[] DMSOpt = DMSList[i].Split(';');
+                    
+                    DMSDeviceList.Items.Add(new ListViewItem(new[] { DMSOpt[0], DMSOpt[1], DMSOpt[2], DMSOpt[3] }));
+                    if (Convert.ToBoolean(DMSOpt[0]))
                     {
-                        string[] hostdata = Regex.Split(WarnList[i], " @ ");
-                        string hostname = hostdata[0];
-                        hostdata = Regex.Split(hostdata[1], ":");
-                        string ip = hostdata[0];
-                        hostdata = Regex.Split(hostdata[1], " - ");
-                        string port = hostdata[0];
-                        string authKey = hostdata[1];
-
-                        HostData.Items.Add(new ListViewItem(new[] { " - ", hostname, ip, port, authKey }));
-                        TestData.Items.Add(new ListViewItem(new[] { hostname, ip, port, "-", "-", "-", "-", "-" }));
+                        DMSDevices.Add(DMSOpt[3]);
+                        DMSEvents.Add(DMSOpt[1]);
                     }
+                    
+                }
 
-                LoggingEnabled = Convert.ToBoolean(config[18].ToString());
-                EnableLogging.Checked = LoggingEnabled;
+            }
 
-                HTTP = Convert.ToBoolean(config[3].ToString());
-                HTTPListen.Checked = HTTP;
+            ShutPC.Checked = Properties.Settings.Default.Shutdown;
+            ShutdownPC = Properties.Settings.Default.Shutdown;
+
+            Unmount.Checked = Properties.Settings.Default.Unmount;
+            UnmountTC = Properties.Settings.Default.Unmount;
+
+            X.Text = Properties.Settings.Default.MouseMax_X.ToString();
+            maximumXmovement = Properties.Settings.Default.MouseMax_X;
+
+            Y.Text = Properties.Settings.Default.MouseMax_Y.ToString();
+            maximumYmovement = Properties.Settings.Default.MouseMax_Y;
+
+            ACProtect.Checked = Properties.Settings.Default.ACProtection;
+            ACProtection = Properties.Settings.Default.ACProtection;
+
+            USBProtect.Checked = Properties.Settings.Default.USBProtection;
+            USBProtection = Properties.Settings.Default.USBProtection;
+
+            NetworkProtect.Checked = Properties.Settings.Default.NetworkProtection;
+            NetworkProtection = Properties.Settings.Default.NetworkProtection;
+
+            Screensaver.Checked = Properties.Settings.Default.Screensaver;
+            UseScreensaver = Properties.Settings.Default.Screensaver;
+
+            KillProcesses.Checked = Properties.Settings.Default.KillProcesses;
+            KillProc = Properties.Settings.Default.KillProcesses;
+            
+            
+            string[] ProcList = Properties.Settings.Default.ProcessList.Split(',');
+            if (ProcList.Count() > 0)
+            {
+                for (int i = 0; i < ProcList.Count(); i++)
+                {
+                    KillProcessList.Items.Add(ProcList[i]);
+                }
             }
         }
 
@@ -2464,6 +2543,119 @@ namespace AntiForensicToolkit
                 }
             }
         }
+
+        private void RemoveDMSDevice_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                int selected = DMSDeviceList.SelectedIndices[0];
+                
+                for (int i = 0; i < DMSDevices.Count; i++)
+                {
+                    if (DMSDeviceList.Items[selected].SubItems[3].Text.Equals(DMSDevices[i]))
+                    {
+                        DMSDevices.RemoveAt(i);
+                        DMSEvents.RemoveAt(i);
+                        
+                    }
+                }
+                DMSDeviceList.Items.RemoveAt(selected);
+            }
+            catch (Exception)
+            {
+
+            }
+        }
+
+        private void ActivateDMSDevice_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                int selected = DMSDeviceList.SelectedIndices[0];
+                DMSDevices.Add(DMSDeviceList.Items[selected].SubItems[3].Text);
+                DMSEvents.Add(DMSDeviceList.Items[selected].SubItems[1].Text);
+
+                DMSDeviceList.Items[selected].SubItems[0].Text = "True";
+            }
+            catch (Exception)
+            {
+
+            }
+        }
+
+        private void DeactivateDMSDevice_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                int selected = DMSDeviceList.SelectedIndices[0];
+                string device = DMSDeviceList.Items[selected].SubItems[3].Text;
+                for (int i = 0; i < DMSDevices.Count; i++)
+                {
+                    if(device.Equals(DMSDevices[i]))
+                    {
+                        DMSDevices.RemoveAt(i);
+                        DMSEvents.RemoveAt(i);
+                    }
+                }
+                DMSDeviceList.Items[selected].SubItems[0].Text = "False";
+            }
+            catch (Exception)
+            {
+
+            }
+        }
+
+        private void X_TextChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                maximumXmovement = int.Parse(X.Text);
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Could not read value");
+            }
+            
+        }
+
+        private void Y_TextChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                maximumYmovement = int.Parse(Y.Text);
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Could not read value");
+            }
+        }
+
+        private void EditDMSDevice_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                int selected = DMSDeviceList.SelectedIndices[0];
+                DMSName.Text = DMSDeviceList.Items[selected].SubItems[2].Text;
+                DMSID.Text = DMSDeviceList.Items[selected].SubItems[3].Text;
+
+                for (int i = 0; i < DMSDevices.Count; i++)
+                {
+                    if (DMSDeviceList.Items[selected].SubItems[3].Text.Equals(DMSDevices[i]))
+                    {
+                        DMSDevices.RemoveAt(i);
+                        DMSPasswords.RemoveAt(i);
+                        DMSEvents.RemoveAt(i);
+
+                    }
+                }
+                DMSDeviceList.Items.RemoveAt(selected);
+            }
+            catch (Exception)
+            {
+
+            }
+        }
+
 
 
 
