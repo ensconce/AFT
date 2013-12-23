@@ -1020,6 +1020,7 @@
             this.SettingsExplained.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.SettingsExplained.Size = new System.Drawing.Size(46, 44);
             this.SettingsExplained.TabIndex = 18;
+            this.SettingsExplained.Visible = false;
             // 
             // UseBroadcast
             // 
@@ -1049,7 +1050,6 @@
             this.SettingsPanel.BackColor = System.Drawing.Color.Transparent;
             this.SettingsPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.SettingsPanel.Controls.Add(this.groupBox1);
-            this.SettingsPanel.Controls.Add(this.ShareConfiguration);
             this.SettingsPanel.Controls.Add(this.groupBox4);
             this.SettingsPanel.Controls.Add(this.groupBox3);
             this.SettingsPanel.Controls.Add(this.SettingsExplained);
@@ -1081,7 +1081,7 @@
             this.groupBox1.Controls.Add(this.label7);
             this.groupBox1.Location = new System.Drawing.Point(263, 53);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(329, 380);
+            this.groupBox1.Size = new System.Drawing.Size(329, 409);
             this.groupBox1.TabIndex = 37;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "DMS Settings";
@@ -1117,7 +1117,7 @@
             // 
             // ClearKillProcessList
             // 
-            this.ClearKillProcessList.Location = new System.Drawing.Point(182, 351);
+            this.ClearKillProcessList.Location = new System.Drawing.Point(182, 377);
             this.ClearKillProcessList.Name = "ClearKillProcessList";
             this.ClearKillProcessList.Size = new System.Drawing.Size(128, 22);
             this.ClearKillProcessList.TabIndex = 37;
@@ -1126,7 +1126,7 @@
             // 
             // GetProcessList
             // 
-            this.GetProcessList.Location = new System.Drawing.Point(11, 352);
+            this.GetProcessList.Location = new System.Drawing.Point(11, 378);
             this.GetProcessList.Name = "GetProcessList";
             this.GetProcessList.Size = new System.Drawing.Size(127, 22);
             this.GetProcessList.TabIndex = 33;
@@ -1169,7 +1169,7 @@
             this.KillProcessList.FormattingEnabled = true;
             this.KillProcessList.Location = new System.Drawing.Point(182, 212);
             this.KillProcessList.Name = "KillProcessList";
-            this.KillProcessList.Size = new System.Drawing.Size(128, 134);
+            this.KillProcessList.Size = new System.Drawing.Size(128, 160);
             this.KillProcessList.TabIndex = 38;
             // 
             // RunningProcesses
@@ -1177,7 +1177,7 @@
             this.RunningProcesses.FormattingEnabled = true;
             this.RunningProcesses.Location = new System.Drawing.Point(11, 212);
             this.RunningProcesses.Name = "RunningProcesses";
-            this.RunningProcesses.Size = new System.Drawing.Size(128, 134);
+            this.RunningProcesses.Size = new System.Drawing.Size(128, 160);
             this.RunningProcesses.TabIndex = 34;
             // 
             // ShutPC
@@ -1246,7 +1246,7 @@
             // 
             // ShareConfiguration
             // 
-            this.ShareConfiguration.Location = new System.Drawing.Point(159, 439);
+            this.ShareConfiguration.Location = new System.Drawing.Point(135, 181);
             this.ShareConfiguration.Name = "ShareConfiguration";
             this.ShareConfiguration.Size = new System.Drawing.Size(96, 23);
             this.ShareConfiguration.TabIndex = 26;
@@ -1257,6 +1257,7 @@
             // groupBox4
             // 
             this.groupBox4.Controls.Add(this.EnableBluetooth);
+            this.groupBox4.Controls.Add(this.ShareConfiguration);
             this.groupBox4.Controls.Add(this.AllowTesting);
             this.groupBox4.Controls.Add(this.RemoteDMS);
             this.groupBox4.Controls.Add(this.ReceiveConfig);
@@ -1267,7 +1268,7 @@
             this.groupBox4.Controls.Add(this.Autostart);
             this.groupBox4.Location = new System.Drawing.Point(14, 249);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(240, 184);
+            this.groupBox4.Size = new System.Drawing.Size(240, 213);
             this.groupBox4.TabIndex = 25;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "AFT settings";
@@ -1758,11 +1759,11 @@
             this.Controls.Add(this.TruecryptButton);
             this.Controls.Add(this.PanicButton);
             this.Controls.Add(this.HostsButton);
-            this.Controls.Add(this.DMSPanel);
             this.Controls.Add(this.SettingsPanel);
             this.Controls.Add(this.HostsPanel);
             this.Controls.Add(this.TestingPanel);
             this.Controls.Add(this.HomePanel);
+            this.Controls.Add(this.DMSPanel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
