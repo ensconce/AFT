@@ -205,10 +205,16 @@ namespace AntiForensicToolkit
                 
 
             // Start the Bluetooth listener
-            btListener = new Thread(new ThreadStart(HandleBluetoothDMS));
-            if(BluetoothEnabled)
-                btListener.Start();
-
+            try
+            {
+                btListener = new Thread(new ThreadStart(HandleBluetoothDMS));
+                if (BluetoothEnabled)
+                    btListener.Start();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
+            }
             m_menu = new ContextMenu();
             m_menu.MenuItems.Add(0,
                 new MenuItem("Open", new System.EventHandler(Show_Click)));
