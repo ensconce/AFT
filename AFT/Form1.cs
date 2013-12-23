@@ -39,6 +39,7 @@ using System.Reflection;
 using Microsoft.Win32;
 using System.Linq.Expressions;
 using System.Configuration;
+using InTheHand.Net.Sockets;
 
 
 namespace AntiForensicToolkit
@@ -68,10 +69,12 @@ namespace AntiForensicToolkit
         string LogFile =            "AFT.log";
         string ConfigFile =         "AFTC.ini";
         string Device =             "";
-        string Password =           "";
-        ArrayList DMSDevices =      new ArrayList();
-        ArrayList DMSPasswords =    new ArrayList();
-        ArrayList DMSEvents =       new ArrayList();
+
+        ArrayList USBDMSDevices =      new ArrayList();
+        ArrayList USBDMSEvents =       new ArrayList();
+        ArrayList BTDMSDevices =       new ArrayList();
+        ArrayList BTDMSEvents =        new ArrayList();
+        ArrayList BTDMSActions =       new ArrayList();
 
         bool DMSEnabled =           false;
         bool ShutdownPC =           false;
@@ -88,13 +91,14 @@ namespace AntiForensicToolkit
         bool DMSAutostart =         false;
         bool LoggingEnabled =       false;
         bool HostCheck =            false;
-        bool UsePassword =          false;
         bool ConfUpdate =           false;
         bool EnableRemoteDMS =      false;
         bool Testing =              false;
         bool KillProc =             false;
         bool NetworkProtection =    false;
         bool DetectingDMS =         false;
+        bool BluetoothEnabled =     false;
+        bool BluetoothDisableDMS =  false;
 
         int maximumXmovement =  10;
         int maximumYmovement =  10;
@@ -104,6 +108,7 @@ namespace AntiForensicToolkit
 
         Thread HttpSrv;
         Thread UdpSrv;
+        Thread btListener;
 
         private ContextMenu m_menu;   
 
@@ -174,13 +179,9 @@ namespace AntiForensicToolkit
 
             try
             {
-                
                 Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
                 ConfigFile = config.FilePath;
                 ApplyConfiguration();
-                //if(FilePath == "")
-                //    checkFileExistance(FilePath);
-                    
             }
             catch (Exception)
             {
@@ -203,10 +204,10 @@ namespace AntiForensicToolkit
             }
                 
 
-            // Start the HTTP Listener thread
-            //HttpSrv = new Thread(HTTPListener);
-            //HttpSrv.IsBackground = true;
-            //HttpSrv.Start();
+            // Start the Bluetooth listener
+            btListener = new Thread(new ThreadStart(HandleBluetoothDMS));
+            if(BluetoothEnabled)
+                btListener.Start();
 
             m_menu = new ContextMenu();
             m_menu.MenuItems.Add(0,
@@ -282,6 +283,7 @@ namespace AntiForensicToolkit
                 Panic();
             else
             {
+                btListener.Abort();
                 SaveConfiguration();
                 notifyIcon1.Visible = false;
                 notifyIcon1.Icon = null;
@@ -490,7 +492,7 @@ namespace AntiForensicToolkit
          */
         private void EnableDMS_Click(object sender, EventArgs e)
         {
-            if (DMSDevices.Count > 0)
+            if (USBDMSDevices.Count > 0)
             {
                 if (LoggingEnabled)
                     Log(3, "DMS ENABLED");
@@ -656,6 +658,8 @@ namespace AntiForensicToolkit
          */
         private void GetUSBBaseline_Click(object sender, EventArgs e)
         {
+            USBDMSDetect.Text = "";
+            USBLoading.Visible = true;
             DetectingDMS = true;
             Thread workerThread = new Thread(DetectNewDMS);
             workerThread.Start();
@@ -672,22 +676,22 @@ namespace AntiForensicToolkit
             string dmsName = "";
             string dmsId = "";
             string dmsEvent = "";
-            if (DMSID.TextLength > 0)
+            if (USBDMSDevice.Items.Count > 0)
             {
-                dmsId = DMSID.Text;
+                dmsId = USBDMSDevice.SelectedItem.ToString();
 
-                if (DMSName.Text != "")
+                if (USBDMSName.Text != "")
                 {
-                    dmsName = DMSName.Text;
-                    if (DMSEvent.SelectedIndex != -1 && DMSEvent.SelectedItem.ToString() != "")
+                    dmsName = USBDMSName.Text;
+                    if (USBDMSAction.SelectedIndex != -1 && USBDMSAction.SelectedItem.ToString() != "")
                     {
-                        dmsEvent = DMSEvent.SelectedItem.ToString();
+                        dmsEvent = USBDMSAction.SelectedItem.ToString();
 
-                        DMSDeviceList.Items.Add(new ListViewItem(new[] { "False", dmsEvent, dmsName, dmsId }));
-                        DMSID.Text = "";
-                        DMSName.Text = "";
+                        USBDMSDeviceList.Items.Add(new ListViewItem(new[] { "False", dmsEvent, dmsName, dmsId }));
+                        USBDMSName.Text = "";
                         if (LoggingEnabled)
                             Log(3, "DMS device saved");
+                        USBDMSDevice.Items.Clear();
                     }
                     else
                         MessageBox.Show("You need to specify an event");
@@ -707,8 +711,8 @@ namespace AntiForensicToolkit
          */
         private void ClearDMS_Click(object sender, EventArgs e)
         {
-            DMSID.Text = "";
-            DMSName.Text = "";
+            USBDMSDevice.Items.Clear();
+            USBDMSName.Text = "";
             //DMSPassword.Text = "";
         }
 
@@ -1338,11 +1342,14 @@ namespace AntiForensicToolkit
                 this.Invoke((MethodInvoker)delegate
                 {
                     int countdown = 15 - (now - start).Seconds;
-                    DMSDetectCountDown.Text = countdown.ToString();
+                    USBDMSDetect.Text = "         " + countdown.ToString();
                 });
                 if (result > 0)
                 {
-                    this.Invoke((MethodInvoker)delegate { DMSDetectCountDown.Text = "No device was detected!"; });
+                    this.Invoke((MethodInvoker)delegate {
+                        USBLoading.Visible = false;
+                        USBDMSDetect.Text = "No device found!"; 
+                    });
                     return;
                 }
                 newDevices = GetDevices();
@@ -1351,11 +1358,11 @@ namespace AntiForensicToolkit
                     if (!baselineDevices.Contains(device) && !device.Equals(Device))
                     {
                         bool exists = false;
-                        for (int i = 0; i < DMSDeviceList.Items.Count; i++)
+                        for (int i = 0; i < USBDMSDeviceList.Items.Count; i++)
                         {
                             this.Invoke((MethodInvoker)delegate
                             {
-                                if (device.Equals(DMSDeviceList.Items[i].SubItems[3].Text))
+                                if (device.Equals(USBDMSDeviceList.Items[i].SubItems[3].Text))
                                     exists = true;
                             });
                         }
@@ -1364,15 +1371,22 @@ namespace AntiForensicToolkit
                         {
                             this.Invoke((MethodInvoker)delegate
                             {
-                                this.Invoke((MethodInvoker)delegate { DMSDetectCountDown.Text = "Device found!"; });
-                                DMSID.Text = device;
+                                USBLoading.Visible = false;
+                                USBDMSDetect.Text = "Device found!";
+                                USBDMSDevice.Items.Clear();
+                                USBDMSDevice.Items.Add(device);
+                                USBDMSDevice.SelectedIndex = 0;
+                                //DMSID.Text = device;
                             });
                             DetectingDMS = false;
                             return;
                         }
                         else
                         {
-                            this.Invoke((MethodInvoker)delegate { DMSDetectCountDown.Text = "Duplicate device!"; });
+                            this.Invoke((MethodInvoker)delegate {
+                                USBLoading.Visible = false;
+                                USBDMSDetect.Text = "Duplicate device!"; 
+                            });
                             DetectingDMS = false;
                             return;
                         }
@@ -1403,6 +1417,16 @@ namespace AntiForensicToolkit
             ArrayList newDevices = new ArrayList();
             while (DMSEnabled == true)
             {
+
+                if (BluetoothDisableDMS)
+                {
+                    DMSEnabled = false;
+                    if (LoggingEnabled)
+                        Log(2, "DMS Disabled with bluetooth device");
+                    break;
+                }
+
+
                 // Check if any unrecognized USB device is plugged in.
                 newDevices = GetDevices();
 
@@ -1410,31 +1434,31 @@ namespace AntiForensicToolkit
                 {
                     if (!baselineDevices.Contains(device)) // Baseline does not contain the new USB device.
                     {
-                        if (USBProtection && !DMSDevices.Contains(device)) // USB protection enabled and device is not recognized, panic!
+                        if (USBProtection && !USBDMSDevices.Contains(device)) // USB protection enabled and device is not recognized, panic!
                         {
                             DMSEnabled = false;
                             Panic();
                         }
-                        if (DMSDevices.Contains(device)) // Our plugged in device is in our saved device-list, perform actions.
+                        if (USBDMSDevices.Contains(device)) // Our plugged in device is in our saved device-list, perform actions.
                         {
-                            for (int i = 0; i < DMSDevices.Count; i++) // Loop through saved devices
+                            for (int i = 0; i < USBDMSDevices.Count; i++) // Loop through saved devices
                             {
-                                if (DMSDevices[i].Equals(device)) // Device found
+                                if (USBDMSDevices[i].Equals(device)) // Device found
                                 {
-                                    if (DMSEvents[i].Equals("Key"))
+                                    if (USBDMSEvents[i].Equals("Key"))
                                     {
                                         if (LoggingEnabled)
                                             Log(2, "DMS Disabled with key device");
                                         DMSEnabled = false;
                                         break;
                                     }
-                                    if (DMSEvents[i].Equals("Panic"))
+                                    if (USBDMSEvents[i].Equals("Panic"))
                                     {
                                         DMSEnabled = false;
                                         Panic();
                                         break;
                                     }
-                                    if (DMSEvents[i].Equals("Lock"))
+                                    if (USBDMSEvents[i].Equals("Lock"))
                                     {
                                         LockWorkStation();
                                         if (LoggingEnabled)
@@ -1480,7 +1504,6 @@ namespace AntiForensicToolkit
          */
         public void Panic()
         {
-            MessageBox.Show("PANIC!");
             if(UnmountTC)
                 UnmountEncryptedPartitions();
             if(Transmit)
@@ -1697,7 +1720,6 @@ namespace AntiForensicToolkit
         public void UDPListener()
         {
             int listenPort = Convert.ToInt32(UDPPort.Text);
-            bool done = false;
                 try
                 {
                     UdpClient listener = new UdpClient(listenPort);
@@ -1767,7 +1789,7 @@ namespace AntiForensicToolkit
                                 {
                                     HostData.Items.Clear();
                                     TestData.Items.Clear();
-                                    DMSDeviceList.Items.Clear();
+                                    USBDMSDeviceList.Items.Clear();
                                     KillProcessList.Items.Clear();
                                     ApplyConfiguration();
                                 });
@@ -2104,16 +2126,16 @@ namespace AntiForensicToolkit
             }
             Properties.Settings.Default.Hosts = HostList;
 
-            // DMS Settings
-            if (DMSDeviceList.Items.Count > 0)
+            // USB DMS Settings
+            if (USBDMSDeviceList.Items.Count > 0)
             {
                 string dmsString = "";
-                for (int i = 0; i < DMSDeviceList.Items.Count; i++)
+                for (int i = 0; i < USBDMSDeviceList.Items.Count; i++)
                 {
-                    dmsString += DMSDeviceList.Items[i].SubItems[0].Text + ";" +
-                        DMSDeviceList.Items[i].SubItems[1].Text + ";" +
-                        DMSDeviceList.Items[i].SubItems[2].Text + ";" +
-                        DMSDeviceList.Items[i].SubItems[3].Text + ","; 
+                    dmsString += USBDMSDeviceList.Items[i].SubItems[0].Text + ";" +
+                        USBDMSDeviceList.Items[i].SubItems[1].Text + ";" +
+                        USBDMSDeviceList.Items[i].SubItems[2].Text + ";" +
+                        USBDMSDeviceList.Items[i].SubItems[3].Text + ","; 
                 }
                 dmsString = dmsString.Remove(dmsString.Length - 1);
                 Properties.Settings.Default.DMSDevices = dmsString;
@@ -2121,15 +2143,33 @@ namespace AntiForensicToolkit
             else
                 Properties.Settings.Default.DMSDevices = "";
 
+            // BT DMS Settings
+            if (BTDMSDeviceList.Items.Count > 0)
+            {
+                string dmsString = "";
+                for (int i = 0; i < BTDMSDeviceList.Items.Count; i++)
+                {
+                    dmsString += BTDMSDeviceList.Items[i].SubItems[0].Text + ";" +
+                        BTDMSDeviceList.Items[i].SubItems[1].Text + ";" +
+                        BTDMSDeviceList.Items[i].SubItems[2].Text + ";" +
+                        BTDMSDeviceList.Items[i].SubItems[3].Text + ",";
+                }
+                dmsString = dmsString.Remove(dmsString.Length - 1);
+                Properties.Settings.Default.BTDMSDevices = dmsString;
+            }
+            else
+                Properties.Settings.Default.BTDMSDevices = "";
+
             Properties.Settings.Default.Shutdown = ShutPC.Checked;
             Properties.Settings.Default.Unmount = Unmount.Checked;
-            Properties.Settings.Default.MouseMax_X = int.Parse(X.Text);
-            Properties.Settings.Default.MouseMax_Y = int.Parse(Y.Text);
+            Properties.Settings.Default.MouseMax_X = maximumXmovement;
+            Properties.Settings.Default.MouseMax_Y = maximumYmovement;
             Properties.Settings.Default.ACProtection = ACProtect.Checked;
             Properties.Settings.Default.USBProtection = USBProtect.Checked;
             Properties.Settings.Default.Screensaver = Screensaver.Checked;
             Properties.Settings.Default.NetworkProtection = NetworkProtect.Checked;
             Properties.Settings.Default.KillProcesses = KillProcesses.Checked;
+            Properties.Settings.Default.EnableBluetooth = EnableBluetooth.Checked;
 
             if (KillProcessList.Items.Count > 0)
             {
@@ -2203,6 +2243,9 @@ namespace AntiForensicToolkit
             AllowTesting.Checked = Properties.Settings.Default.Testing;
             Testing = Properties.Settings.Default.Testing;
 
+            EnableBluetooth.Checked = Properties.Settings.Default.EnableBluetooth;
+            BluetoothEnabled = Properties.Settings.Default.EnableBluetooth;
+
             string[] HostList = Properties.Settings.Default.Hosts.Split(',');
             if (HostList.Count() > 0 && Properties.Settings.Default.Hosts != "")
             {
@@ -2218,27 +2261,40 @@ namespace AntiForensicToolkit
                 }
             }
 
-            // DMS Settings
-            
-            string[] DMSList = Properties.Settings.Default.DMSDevices.Split(',');
-            if (DMSList.Count() > 0 && Properties.Settings.Default.DMSDevices != "")
+            // USB DMS Settings
+            string[] USBDMSList = Properties.Settings.Default.DMSDevices.Split(',');
+            if (USBDMSList.Count() > 0 && Properties.Settings.Default.DMSDevices != "")
             {
-                
-                for (int i = 0; i < DMSList.Count(); i++)
+                for (int i = 0; i < USBDMSList.Count(); i++)
                 {
-                    MessageBox.Show(DMSList[i]);
-                    string[] DMSOpt = DMSList[i].Split(';');
-                    
-                    DMSDeviceList.Items.Add(new ListViewItem(new[] { DMSOpt[0], DMSOpt[1], DMSOpt[2], DMSOpt[3] }));
+                    string[] DMSOpt = USBDMSList[i].Split(';');
+                    USBDMSDeviceList.Items.Add(new ListViewItem(new[] { DMSOpt[0], DMSOpt[1], DMSOpt[2], DMSOpt[3] }));
                     if (Convert.ToBoolean(DMSOpt[0]))
                     {
-                        DMSDevices.Add(DMSOpt[3]);
-                        DMSEvents.Add(DMSOpt[1]);
+                        USBDMSDevices.Add(DMSOpt[3]);
+                        USBDMSEvents.Add(DMSOpt[1]);
                     }
-                    
                 }
-
             }
+
+            // BT DMS Settings
+            string[] BTDMSList = Properties.Settings.Default.BTDMSDevices.Split(',');
+            if (BTDMSList.Count() > 0 && Properties.Settings.Default.BTDMSDevices != "")
+            {
+                for (int i = 0; i < BTDMSList.Count(); i++)
+                {
+                    string[] DMSOpt = BTDMSList[i].Split(';');
+                    BTDMSDeviceList.Items.Add(new ListViewItem(new[] { DMSOpt[0], DMSOpt[1], DMSOpt[2], DMSOpt[3] }));
+                    if (Convert.ToBoolean(DMSOpt[0]))
+                    {
+                        BTDMSDevices.Add(DMSOpt[3]);
+                        BTDMSEvents.Add(DMSOpt[2]);
+                        BTDMSActions.Add(DMSOpt[1]);
+                    }
+                }
+            }
+
+
 
             ShutPC.Checked = Properties.Settings.Default.Shutdown;
             ShutdownPC = Properties.Settings.Default.Shutdown;
@@ -2555,18 +2611,18 @@ namespace AntiForensicToolkit
         {
             try
             {
-                int selected = DMSDeviceList.SelectedIndices[0];
-                
-                for (int i = 0; i < DMSDevices.Count; i++)
+                int selected = USBDMSDeviceList.SelectedIndices[0];
+
+                for (int i = 0; i < USBDMSDevices.Count; i++)
                 {
-                    if (DMSDeviceList.Items[selected].SubItems[3].Text.Equals(DMSDevices[i]))
+                    if (USBDMSDeviceList.Items[selected].SubItems[3].Text.Equals(USBDMSDevices[i]))
                     {
-                        DMSDevices.RemoveAt(i);
-                        DMSEvents.RemoveAt(i);
+                        USBDMSDevices.RemoveAt(i);
+                        USBDMSEvents.RemoveAt(i);
                         
                     }
                 }
-                DMSDeviceList.Items.RemoveAt(selected);
+                USBDMSDeviceList.Items.RemoveAt(selected);
             }
             catch (Exception)
             {
@@ -2578,11 +2634,20 @@ namespace AntiForensicToolkit
         {
             try
             {
-                int selected = DMSDeviceList.SelectedIndices[0];
-                DMSDevices.Add(DMSDeviceList.Items[selected].SubItems[3].Text);
-                DMSEvents.Add(DMSDeviceList.Items[selected].SubItems[1].Text);
+                int selected = USBDMSDeviceList.SelectedIndices[0];
+                bool exists = false;
 
-                DMSDeviceList.Items[selected].SubItems[0].Text = "True";
+                for(int i = 0; i < USBDMSDevices.Count; i++)
+                    if (USBDMSDevices[i].Equals(USBDMSDeviceList.Items[selected].SubItems[3].Text))
+                        exists = true;
+
+                if (!exists)
+                {
+                    USBDMSDevices.Add(USBDMSDeviceList.Items[selected].SubItems[3].Text);
+                    USBDMSEvents.Add(USBDMSDeviceList.Items[selected].SubItems[1].Text);
+
+                    USBDMSDeviceList.Items[selected].SubItems[0].Text = "True";
+                }
             }
             catch (Exception)
             {
@@ -2594,17 +2659,17 @@ namespace AntiForensicToolkit
         {
             try
             {
-                int selected = DMSDeviceList.SelectedIndices[0];
-                string device = DMSDeviceList.Items[selected].SubItems[3].Text;
-                for (int i = 0; i < DMSDevices.Count; i++)
+                int selected = USBDMSDeviceList.SelectedIndices[0];
+                string device = USBDMSDeviceList.Items[selected].SubItems[3].Text;
+                for (int i = 0; i < USBDMSDevices.Count; i++)
                 {
-                    if(device.Equals(DMSDevices[i]))
+                    if (device.Equals(USBDMSDevices[i]))
                     {
-                        DMSDevices.RemoveAt(i);
-                        DMSEvents.RemoveAt(i);
+                        USBDMSDevices.RemoveAt(i);
+                        USBDMSEvents.RemoveAt(i);
                     }
                 }
-                DMSDeviceList.Items[selected].SubItems[0].Text = "False";
+                USBDMSDeviceList.Items[selected].SubItems[0].Text = "False";
             }
             catch (Exception)
             {
@@ -2614,48 +2679,58 @@ namespace AntiForensicToolkit
 
         private void X_TextChanged(object sender, EventArgs e)
         {
-            try
+            if (X.Text != "")
             {
-                maximumXmovement = int.Parse(X.Text);
+                try
+                {
+                    maximumXmovement = int.Parse(X.Text);
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("Could not read value");
+                }
             }
-            catch (Exception)
-            {
-                MessageBox.Show("Could not read value");
-            }
+            else
+                maximumXmovement = 10;
             
         }
 
         private void Y_TextChanged(object sender, EventArgs e)
         {
-            try
+            if (Y.Text != "")
             {
-                maximumYmovement = int.Parse(Y.Text);
+                try
+                {
+                    maximumYmovement = int.Parse(Y.Text);
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("Could not read value");
+                }
             }
-            catch (Exception)
-            {
-                MessageBox.Show("Could not read value");
-            }
+            else
+                maximumYmovement = 10;
         }
 
         private void EditDMSDevice_Click(object sender, EventArgs e)
         {
             try
             {
-                int selected = DMSDeviceList.SelectedIndices[0];
-                DMSName.Text = DMSDeviceList.Items[selected].SubItems[2].Text;
-                DMSID.Text = DMSDeviceList.Items[selected].SubItems[3].Text;
+                int selected = USBDMSDeviceList.SelectedIndices[0];
+                USBDMSName.Text = USBDMSDeviceList.Items[selected].SubItems[2].Text;
+                USBDMSDevice.Items.Clear();
+                USBDMSDevice.Items.Add(USBDMSDeviceList.Items[selected].SubItems[3].Text);
+                USBDMSDevice.SelectedIndex = 0;
 
-                for (int i = 0; i < DMSDevices.Count; i++)
+                for (int i = 0; i < USBDMSDevices.Count; i++)
                 {
-                    if (DMSDeviceList.Items[selected].SubItems[3].Text.Equals(DMSDevices[i]))
+                    if (USBDMSDeviceList.Items[selected].SubItems[3].Text.Equals(USBDMSDevices[i]))
                     {
-                        DMSDevices.RemoveAt(i);
-                        DMSPasswords.RemoveAt(i);
-                        DMSEvents.RemoveAt(i);
-
+                        USBDMSDevices.RemoveAt(i);
+                        USBDMSEvents.RemoveAt(i);
                     }
                 }
-                DMSDeviceList.Items.RemoveAt(selected);
+                USBDMSDeviceList.Items.RemoveAt(selected);
             }
             catch (Exception)
             {
@@ -2663,14 +2738,257 @@ namespace AntiForensicToolkit
             }
         }
 
+        private void DetectBluetoothDevices_Click(object sender, EventArgs e)
+        {
+            BTLoading.Visible = true;
+            BTDMSDetect.Text = "";
+            Thread bluetoothServerThread = new Thread(new ThreadStart(BluetoothDetect));
+            bluetoothServerThread.Start();
+            BTDMSDevice.Items.Clear();
+        }
 
 
 
+        public void BluetoothDetect()
+        {
+            try
+            {
+                List<Device> devices = new List<Device>();
+                BluetoothClient bc = new InTheHand.Net.Sockets.BluetoothClient();
+                BluetoothDeviceInfo[] array = bc.DiscoverDevices();
+                int count = array.Length;
+                for (int i = 0; i < count; i++)
+                {
+                    Device device = new Device(array[i]);
+                    
+                    this.Invoke((MethodInvoker)delegate
+                    {
+                        BTDMSDevice.Items.Add(device);
+                    });
+                }
+                this.Invoke((MethodInvoker)delegate
+                {
+                    BTLoading.Visible = false;
+                    BTDMSDetect.Text = count + " devices found!";
+                    BTDMSDevice.SelectedIndex = 0;
+                });
 
+            }
+            catch (Exception)
+            {
+                if (LoggingEnabled)
+                    Log(2, "Something wen't wrong trying to fetch BT devices!");
+            }
+        }
 
+        private void SaveBTDMS_Click(object sender, EventArgs e)
+        {
+            string deviceName = "";
+            string dmsAction = "";
+            string dmsEvent = "";
+            if (BTDMSDevice.Items.Count > 0)
+            {
+                deviceName = BTDMSDevice.SelectedItem.ToString();
 
+                if (BTDMSAction.SelectedIndex != -1 && BTDMSAction.SelectedItem.ToString() != "")
+                {
+                    dmsAction = BTDMSAction.SelectedItem.ToString();
 
+                    if (BTDMSEvent.SelectedIndex != -1 && BTDMSEvent.SelectedItem.ToString() != "")
+                    {
+                        dmsEvent = BTDMSEvent.SelectedItem.ToString();
+                        BTDMSDeviceList.Items.Add(new ListViewItem(new[] { "False", dmsAction, dmsEvent, deviceName }));
+                        if (LoggingEnabled)
+                            Log(3, "DMS device saved");
+                        BTDMSDevice.Items.Clear();
+                    }
+                    else
+                        MessageBox.Show("You need to specify an event");
+                }
+                else
+                    MessageBox.Show("You need to specify an action");
+            }
+            else
+                MessageBox.Show("No DMS device has been selected");
+        }
 
+        public void HandleBluetoothDMS()
+        {
+            while (BluetoothEnabled)
+            {
+                if (BTDMSDevices.Count > 0)
+                {
+                    try
+                    {
+                        ArrayList InRangeDevices = new ArrayList();
+                        List<Device> devices = new List<Device>();
+                        BluetoothClient bc = new InTheHand.Net.Sockets.BluetoothClient();
+                        BluetoothDeviceInfo[] array = bc.DiscoverDevices();
+                        int count = array.Length;
+                        for (int i = 0; i < count; i++)
+                        {
+                            Device device = new Device(array[i]);
+                            InRangeDevices.Add(device.DeviceName);
+                        }
+
+                        for (int i = 0; i < BTDMSDevices.Count; i++)
+                        {
+                            if (BTDMSEvents[i].ToString().Equals("Out of range")) // Event out of range condition met
+                            {
+                                if (!InRangeDevices.Contains(BTDMSDevices[i]))
+                                {
+                                    if (BTDMSActions[i].ToString().Equals("Enable DMS") && DMSEnabled == false)
+                                    {
+                                        if (LoggingEnabled)
+                                            Log(2, "DMS enabled - bluetooth device not in range");
+                                        this.Invoke((MethodInvoker)delegate {
+                                            EnableDMS.PerformClick();
+                                        });
+                                    }
+                                    if (BTDMSActions[i].ToString().Equals("Panic"))
+                                    {
+                                        Panic();
+                                    }
+                                    if (BTDMSActions[i].ToString().Equals("Lock"))
+                                    {
+                                        LockWorkStation();
+                                        if (LoggingEnabled)
+                                            Log(2, "Desktop locked with device");
+                                    }
+                                }
+                            }
+                            if (BTDMSEvents[i].ToString().Equals("In range")) // Event in range condition met
+                            {
+                                if (InRangeDevices.Contains(BTDMSDevices[i]))
+                                {
+                                    if (BTDMSActions[i].ToString().Equals("Disable DMS") && DMSEnabled == true)
+                                    {
+                                        BluetoothDisableDMS = true;
+                                    }
+                                }
+                            }
+                        }      
+                    }
+                    catch (Exception)
+                    {
+                       // if (LoggingEnabled)
+                       //     Log(2, "Something wen't wrong trying to fetch BT devices!");
+                    }
+                }
+            }
+        }
+
+        private void EnableBluetooth_CheckedChanged(object sender, EventArgs e)
+        {
+            if (EnableBluetooth.Checked)
+            {
+                BluetoothEnabled = true;
+                BTGroupBox.Enabled = true;
+            }
+            else
+            {
+                BluetoothEnabled = false;
+                BTGroupBox.Enabled = false;
+            }
+        }
+
+        private void ActivateBTDMSDevice_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                int selected = BTDMSDeviceList.SelectedIndices[0];
+                bool exists = false;
+                for (int i = 0; i < BTDMSDevices.Count; i++)
+                    if (BTDMSDevices[i].Equals(BTDMSDeviceList.Items[selected].SubItems[3].Text))
+                        if(BTDMSEvents[i].Equals(BTDMSDeviceList.Items[selected].SubItems[2].Text))
+                            exists = true;
+
+                if (!exists)
+                {
+                    BTDMSDevices.Add(BTDMSDeviceList.Items[selected].SubItems[3].Text);
+                    BTDMSActions.Add(BTDMSDeviceList.Items[selected].SubItems[2].Text);
+                    BTDMSEvents.Add(BTDMSDeviceList.Items[selected].SubItems[1].Text);
+
+                    BTDMSDeviceList.Items[selected].SubItems[0].Text = "True";
+                }
+            }
+            catch (Exception)
+            {
+
+            }
+        }
+
+        private void DeactivateBTDMSDevice_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                int selected = BTDMSDeviceList.SelectedIndices[0];
+                
+                for (int i = 0; i < BTDMSDevices.Count; i++)
+                {
+                    if(BTDMSDevices[i].Equals(BTDMSDeviceList.Items[selected].SubItems[3].Text))
+                    {
+                        BTDMSDevices.RemoveAt(i);
+                        BTDMSEvents.RemoveAt(i);
+                        BTDMSActions.RemoveAt(i);
+                        BTDMSDeviceList.Items[selected].SubItems[0].Text = "False";
+                    }
+                }
+                
+            }
+            catch (Exception)
+            {
+
+            }
+        }
+
+        private void EditBTDMSDevice_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                int selected = BTDMSDeviceList.SelectedIndices[0];
+                BTDMSDevice.Items.Clear();
+                BTDMSDevice.Items.Add(BTDMSDeviceList.Items[selected].SubItems[3].Text);
+                BTDMSDevice.SelectedIndex = 0;
+
+                for (int i = 0; i < BTDMSDevices.Count; i++)
+                {
+                    if (BTDMSDeviceList.Items[selected].SubItems[3].Text.Equals(BTDMSDevices[i]))
+                    {
+                        BTDMSDevices.RemoveAt(i);
+                        BTDMSEvents.RemoveAt(i);
+                        BTDMSActions.RemoveAt(i);
+                    }
+                }
+                BTDMSDeviceList.Items.RemoveAt(selected);
+            }
+            catch (Exception)
+            {
+
+            }
+        }
+
+        private void RemoveBTDMSDevice_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                int selected = BTDMSDeviceList.SelectedIndices[0];
+                for (int i = 0; i < BTDMSDevices.Count; i++)
+                {
+                    if (BTDMSDeviceList.Items[selected].SubItems[3].Text.Equals(BTDMSDevices[i]))
+                    {
+                        BTDMSDevices.RemoveAt(i);
+                        BTDMSEvents.RemoveAt(i);
+                        BTDMSActions.RemoveAt(i);
+                    }
+                }
+                BTDMSDeviceList.Items.RemoveAt(selected);
+            }
+            catch (Exception)
+            {
+
+            }
+        }
     }
 
     /*

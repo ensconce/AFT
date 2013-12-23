@@ -358,5 +358,29 @@ namespace AntiForensicToolkit.Properties {
                 this["NetworkProtection"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool EnableBluetooth {
+            get {
+                return ((bool)(this["EnableBluetooth"]));
+            }
+            set {
+                this["EnableBluetooth"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string BTDMSDevices {
+            get {
+                return ((string)(this["BTDMSDevices"]));
+            }
+            set {
+                this["BTDMSDevices"] = value;
+            }
+        }
     }
 }
