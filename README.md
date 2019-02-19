@@ -1,6 +1,9 @@
 Anti-Forensic Toolkit
 ===
 
+WARNING: THIS CODE IS NO LONGER MAINTANED!
+
+
 AFT is a countermeasure application used for encrypted systems.
 
 AFT is a simple Windows application suitable for those who have sensitive data to protect.
